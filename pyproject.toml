@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=65.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "azure-security-scanner"
+version = "1.0.0"
+description = "Azure cloud security scanner for vulnerability detection"
+requires-python = ">=3.9"
+
+[tool.pytest.ini_options]
+testpaths = ["scanner/tests"]
+addopts = "--cov=scanner/src --cov-report=html --cov-report=term-missing"
+python_files = "test_*.py"
+
+[tool.coverage.run]
+source = ["scanner/src"]
+
+[tool.mypy]
+python_version = "3.9"
+ignore_missing_imports = true

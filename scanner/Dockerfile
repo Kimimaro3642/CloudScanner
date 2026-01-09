@@ -1,6 +1,19 @@
 FROM python:3.12-slim
+
 WORKDIR /app
-COPY scanner/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
-COPY scanner/src /app/scanner/src
-ENTRYPOINT ["python","/app/scanner/src/main.py"]
+
+# Copy requirements from root (not scanner/)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy entire scanner folder
+COPY scanner/ ./scanner/
+
+# Create reports directory
+RUN mkdir -p reports
+
+# Set environment for Azure auth
+ENV PYTHONUNBUFFERED=1
+
+# Run scanner
+ENTRYPOINT ["python", "-m", "scanner.src.main"]

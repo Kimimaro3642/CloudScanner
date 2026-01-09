@@ -1,0 +1,42 @@
+# This file specifies code ownership and reviewers for CloudScanner
+# Format: path @owner @reviewer
+# Reference: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Root-level documentation
+*.md @Kimimaro3642
+SECURITY.md @Kimimaro3642
+CONTRIBUTING.md @Kimimaro3642
+ARCHITECTURE.md @Kimimaro3642
+PROGRESS.md @Kimimaro3642
+ISSUES.md @Kimimaro3642
+
+# Configuration files
+pyproject.toml @Kimimaro3642
+requirements.txt @Kimimaro3642
+.gitignore @Kimimaro3642
+.flake8 @Kimimaro3642
+.pylintrc @Kimimaro3642
+.env @Kimimaro3642
+
+# CI/CD workflows
+.github/workflows/ @Kimimaro3642
+.github/CODEOWNERS @Kimimaro3642
+
+# Scanner source code
+scanner/src/ @Kimimaro3642
+scanner/src/main.py @Kimimaro3642
+scanner/src/scan.py @Kimimaro3642
+scanner/src/checks/ @Kimimaro3642
+scanner/src/core/ @Kimimaro3642
+
+# Tests (should match src ownership)
+scanner/tests/ @Kimimaro3642
+
+# Docker
+scanner/Dockerfile @Kimimaro3642
+
+# Terraform (when added)
+terraform/ @Kimimaro3642
+
+# Default owners for any unspecified files
+* @Kimimaro3642

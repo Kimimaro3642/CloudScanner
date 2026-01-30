@@ -1930,7 +1930,365 @@ on:
 
 ---
 
-# 9. DOCKERFILE
+# 9. TEST REPORTS SCRIPT (test_reports.py)
+
+## What This File Does
+Generates sample security findings and creates HTML/JSON reports without needing real Azure credentials. Useful for testing, documentation, and demonstrations.
+
+### Why It Exists
+When developing or demonstrating the scanner, you often can't use real Azure credentials. This script lets you generate realistic-looking findings to test the report generation system.
+
+### Code Breakdown
+
+```python
+#!/usr/bin/env python3
+"""
+Test script to generate sample findings and create reports.
+This demonstrates what the HTML and JSON reports look like.
+
+USAGE:
+    python test_reports.py
+
+OUTPUT:
+    - reports/test_run.html (formatted HTML report for browser viewing)
+    - reports/test_run.json (structured JSON findings)
+
+VIEW RESULTS:
+    Windows: start reports/test_run.html
+    macOS/Linux: open reports/test_run.html
+
+DESCRIPTION:
+This script is useful for:
+- Testing the report generation without Azure credentials
+- Seeing how findings are formatted in HTML and JSON
+- Demonstrating the scanner's output format
+- Development and documentation purposes
+"""
+```
+
+**What:** Docstring with detailed usage instructions  
+**Plain English:** This tells anyone reading the file exactly how to use it, what it outputs, and why it's useful
+
+---
+
+```python
+import sys
+import os
+```
+
+**What:** Import system and OS modules  
+**Plain English:** We need `sys` for path manipulation and `os` for cross-platform path handling
+
+---
+
+```python
+# Add scanner/src to path for relative imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'scanner', 'src'))
+```
+
+**What:** Modify Python's import search path  
+**Plain English:**
+- `os.path.dirname(__file__)` - Get the directory where this script is located
+- `os.path.join(..., 'scanner', 'src')` - Build the path to scanner/src folder
+- `sys.path.insert(0, ...)` - Add this path to the FRONT of Python's search list
+
+**Why?** When you run `python test_reports.py` from the repo root, Python needs to know where to find `scanner.src.core.model` and `scanner.src.core.reporter`. We're explicitly telling it.
+
+**Example:**
+```
+If script is at: C:\Users\ljohn\...\Latest_Repo\test_reports.py
+Then __file__ = C:\Users\ljohn\...\Latest_Repo\test_reports.py
+Then dirname = C:\Users\ljohn\...\Latest_Repo
+Then path = C:\Users\ljohn\...\Latest_Repo\scanner\src
+```
+
+---
+
+```python
+from scanner.src.core.model import Finding
+from scanner.src.core.reporter import write_html, write_json
+```
+
+**What:** Import the classes/functions we need  
+**Plain English:**
+- Import `Finding` class (data structure for vulnerabilities)
+- Import `write_html` function (creates HTML reports)
+- Import `write_json` function (creates JSON reports)
+
+These are the same imports used in the actual scanner checks.
+
+---
+
+```python
+# Create sample findings to demonstrate what reports look like
+sample_findings = [
+    Finding(
+        id="AZ-NSG-WORLD-SSH",
+        service="NSG",
+        resource="prod-rg/prod-nsg/allow-ssh",
+        rule="NSG_WORLD_SSH",
+        description="Network Security Group allows world-accessible SSH (port 22)",
+        severity="High",
+        mitre="T1046",
+        references=["https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview"],
+        metadata={"port": 22, "source": "0.0.0.0/0"}
+    ),
+    Finding(
+        id="AZ-NSG-WORLD-RDP",
+        service="NSG",
+        resource="prod-rg/remote-nsg/allow-rdp",
+        rule="NSG_WORLD_RDP",
+        description="Network Security Group allows world-accessible RDP (port 3389)",
+        severity="High",
+        mitre="T1046",
+        references=["https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview"],
+        metadata={"port": 3389, "source": "0.0.0.0/0"}
+    ),
+    Finding(
+        id="AZ-STG-PUBLIC-BLOB",
+        service="Storage",
+        resource="prodstorageacct",
+        rule="STG_PUBLIC_BLOB",
+        description="Storage Account has public blob access enabled",
+        severity="High",
+        mitre="T1530",
+        references=["https://docs.microsoft.com/azure/storage/blobs/anonymous-read-access-configure"],
+        metadata={"account_type": "StorageV2"}
+    ),
+    Finding(
+        id="AZ-KV-PURGE-PROTECTION-DISABLED",
+        service="KeyVault",
+        resource="prod-keyvault-001",
+        rule="KV_NO_PURGE_PROTECTION",
+        description="Key Vault does not have purge protection enabled",
+        severity="Medium",
+        mitre="T1211",
+        references=["https://docs.microsoft.com/azure/key-vault/general/soft-delete-overview"],
+        metadata={"location": "eastus"}
+    ),
+    Finding(
+        id="AZ-NSG-WORLD-HTTP",
+        service="NSG",
+        resource="dev-rg/web-nsg/allow-http",
+        rule="NSG_WORLD_HTTP",
+        description="Network Security Group allows world-accessible HTTP (port 80)",
+        severity="Medium",
+        mitre="T1190",
+        references=["https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview"],
+        metadata={"port": 80, "source": "0.0.0.0/0"}
+    ),
+]
+```
+
+**What:** Create a list of sample Finding objects  
+**Plain English:** 
+- We create 5 different vulnerability findings
+- Each represents a real security issue (NSG world-open, public storage, disabled purge protection)
+- Mix of High and Medium severity
+- Each has complete information (id, description, MITRE mapping, references, metadata)
+
+**Why Multiple Examples?** 
+- Tests different service types (NSG, Storage, KeyVault)
+- Tests different severity levels
+- Shows variety in real-world reports
+
+**Each Finding Contains:**
+- `id` - Unique identifier
+- `service` - Which Azure service
+- `resource` - Specific resource name/path
+- `rule` - Rule code
+- `description` - What the vulnerability is
+- `severity` - How bad (High/Medium/Low)
+- `mitre` - MITRE ATT&CK technique
+- `references` - Links to documentation
+- `metadata` - Extra details (port, location, etc.)
+
+---
+
+```python
+if __name__ == "__main__":
+```
+
+**What:** Entry point check  
+**Plain English:** This code only runs if someone executes this file directly (not if it's imported)
+
+---
+
+```python
+    print(f"Generating test reports with {len(sample_findings)} sample findings...\n")
+```
+
+**What:** Print starting message  
+**Plain English:** Tell the user how many findings we're about to generate (5 in this case)
+
+**Output:**
+```
+Generating test reports with 5 sample findings...
+```
+
+---
+
+```python
+    # Write JSON report
+    json_path = "reports/test_run.json"
+    write_json(sample_findings, json_path)
+    print(f"✅ JSON report: {json_path}")
+```
+
+**What:** Generate JSON report  
+**Plain English:**
+- Define the output path as `reports/test_run.json`
+- Call `write_json()` (imported from reporter.py) with:
+  - `sample_findings` - The list of findings
+  - `json_path` - Where to save it
+- Print confirmation message
+
+**What write_json Does:**
+- Takes each Finding object
+- Converts it to a dictionary
+- Writes all findings to a JSON file
+- Includes nice formatting (indentation)
+
+**Output File Example:**
+```json
+[
+  {
+    "id": "AZ-NSG-WORLD-SSH",
+    "service": "NSG",
+    "resource": "prod-rg/prod-nsg/allow-ssh",
+    "rule": "NSG_WORLD_SSH",
+    "description": "Network Security Group allows world-accessible SSH (port 22)",
+    "severity": "High",
+    "mitre": "T1046",
+    "references": [...],
+    "metadata": {...}
+  }
+]
+```
+
+---
+
+```python
+    # Write HTML report
+    html_path = "reports/test_run.html"
+    write_html("azure", sample_findings, html_path)
+    print(f"✅ HTML report: {html_path}")
+```
+
+**What:** Generate HTML report  
+**Plain English:**
+- Define the output path as `reports/test_run.html`
+- Call `write_html()` (imported from reporter.py) with:
+  - `"azure"` - Cloud provider name
+  - `sample_findings` - The list of findings
+  - `html_path` - Where to save it
+- Print confirmation message
+
+**What write_html Does:**
+- Takes the HTML template from reporter.py
+- Fills in the findings data using Jinja2
+- Writes formatted HTML to file
+
+**Output File:** A nice HTML report you can open in any browser
+
+---
+
+```python
+    print(f"\nReports generated with {len(sample_findings)} findings:")
+    for finding in sample_findings:
+        print(f"  - {finding.id}: {finding.description} ({finding.severity})")
+```
+
+**What:** Print summary of findings  
+**Plain English:**
+- Print a blank line
+- Loop through each finding
+- Print its ID, description, and severity
+
+**Output Example:**
+```
+Reports generated with 5 findings:
+  - AZ-NSG-WORLD-SSH: Network Security Group allows world-accessible SSH (port 22) (High)
+  - AZ-NSG-WORLD-RDP: Network Security Group allows world-accessible RDP (port 3389) (High)
+  - AZ-STG-PUBLIC-BLOB: Storage Account has public blob access enabled (High)
+  - AZ-KV-PURGE-PROTECTION-DISABLED: Key Vault does not have purge protection enabled (Medium)
+  - AZ-NSG-WORLD-HTTP: Network Security Group allows world-accessible HTTP (port 80) (Medium)
+```
+
+---
+
+```python
+    print("\n📖 View reports:")
+    print(f"  JSON: Open {json_path} in VS Code or text editor")
+    print(f"  HTML: Run 'start {html_path}' to open in browser")
+```
+
+**What:** Instructions on viewing reports  
+**Plain English:** Tell the user how to open and view the generated reports
+
+**Output:**
+```
+📖 View reports:
+  JSON: Open reports/test_run.json in VS Code or text editor
+  HTML: Run 'start reports/test_run.html' to open in browser
+```
+
+---
+
+## test_reports.py Usage
+
+### Running It
+
+```bash
+python test_reports.py
+```
+
+### What Happens
+
+1. ✅ Creates `reports/test_run.json` with sample findings
+2. ✅ Creates `reports/test_run.html` with formatted report
+3. ✅ Prints summary to console
+4. ✅ Shows you how to view the reports
+
+### View Results
+
+**JSON (machine-readable):**
+```bash
+cat reports/test_run.json
+# or open in VS Code
+```
+
+**HTML (human-readable):**
+```bash
+# Windows
+start reports/test_run.html
+
+# macOS/Linux
+open reports/test_run.html
+```
+
+---
+
+## Why This Script Is Important
+
+**For Development:**
+- Test report generation without Azure credentials
+- Verify HTML/JSON output format
+- Catch formatting bugs before live runs
+
+**For Documentation:**
+- Show what findings look like
+- Demonstrate scanner output format
+- Create examples for capstone report
+
+**For Demos:**
+- Show stakeholders what reports look like
+- No need to expose real Azure resources
+- Quick, reproducible output
+
+---
+
+# 10. DOCKERFILE
 
 ## What This File Does
 Defines how to build a Docker container for the scanner.

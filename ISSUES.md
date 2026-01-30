@@ -409,4 +409,35 @@ Now when the live scanner runs against real Azure resources:
 ---
 
 **Last Updated:** Jan 30, 2026  
-**Total Issues:** 15 (12 resolved, 3 anticipated)
+**Total Issues:** 16 (12 resolved, 4 anticipated)
+
+---
+
+## Lessons Learned - Dependencies
+
+### Why .coverage File Didn't Mean pytest Was Installed
+**Common Misconception:** Having a `.coverage` file doesn't mean pytest/pytest-cov packages are installed.
+
+**Explanation:**
+- `.coverage` is an **artifact/output file** - data created by pytest-cov after tests run
+- It's like a test report - tells you results, but doesn't include the tools that created it
+- The actual packages must be declared in `requirements.txt` or `pyproject.toml`
+- Simply having the data file doesn't auto-install the packages
+
+**Solution:** Always explicitly list test dependencies in requirements:
+```
+# Production
+azure-identity==1.17.1
+azure-mgmt-network==25.3.0
+# ... etc
+
+# Testing
+pytest==9.0.2
+pytest-cov==7.0.0
+```
+
+**Best Practice:** Consider separate files:
+- `requirements.txt` - Production only
+- `requirements-dev.txt` - Testing/dev tools
+
+Updated in this session: requirements.txt now includes pytest and pytest-cov.

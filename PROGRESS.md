@@ -13,22 +13,35 @@
 - Architecture fully documented and understood
 
 ## Current Phase
-- **Deep dive into codebase** (COMPLETED)
-  - Requirements.txt dependencies explained
-  - main.py, scan.py entry points documented
-  - All three security checks (NSG, Storage, KeyVault) analyzed
-  - Core utilities (model, clients, cvss, mitre, reporter) documented
-  - Test suite patterns understood
-  - Configuration files explained
-  - CI/CD workflows documented
+- **Deep dive into codebase** (COMPLETED Jan 30)
+  - ✅ Requirements.txt dependencies explained
+  - ✅ main.py, scan.py entry points documented
+  - ✅ All three security checks (NSG, Storage, KeyVault) analyzed
+  - ✅ Core utilities (model, clients, cvss, mitre, reporter) documented
+  - ✅ Test suite patterns understood
+  - ✅ Configuration files explained
+  - ✅ CI/CD workflows documented
+- **Test reports generation** (COMPLETED Jan 30)
+  - ✅ Created test_reports.py script
+  - ✅ Fixed import path issues (absolute vs relative imports)
+  - ✅ Generated sample findings (5 test cases)
+  - ✅ Created HTML and JSON test reports
+  - ✅ Added documentation to README and TESTING.md
+- **HTML report enhancements** (COMPLETED Jan 30)
+  - ✅ Added MITRE ATT&CK mapping display
+  - ✅ Improved HTML template with CSS styling
+  - ✅ Added CVSS 3.1 scoring with color-coded severity
+  - ✅ Enhanced report readability and layout
+  - ✅ Added comprehensive finding details (service, resource, rule)
 - **Next: Terraform infrastructure code**
   - Design main.tf for ACI deployment
   - Create variables.tf for inputs
   - Define outputs.tf for results
+  - Set up state management
 
 ## Waiting On
-- User decision: Update remaining library versions or keep current pinned versions
-- Terraform architecture design decisions
+- User decision: Start Terraform infrastructure code or continue with other enhancements
+- Azure lab environment credentials (for live testing)
 
 ## Future Phases
 - [ ] Terraform code (main.tf, variables.tf, etc.)
@@ -54,6 +67,10 @@ git add -A && git commit -m "message" && git push
 
 ## Session Notes
 - Started: Jan 9, 2026
+- Current Session: Jan 30, 2026 (deep dive + test reports)
 - GitHub: https://github.com/Kimimaro3642/CloudScanner
-- Dockerfile updated with improvements
-- Next session: Continue from Docker build step
+- Major Milestones:
+  - Jan 9: Project scaffolding, unit tests, CI/CD setup
+  - Jan 12: Docker installation and image build
+  - Jan 30: Codebase documentation, test reports, README updates
+- Next session: Terraform infrastructure

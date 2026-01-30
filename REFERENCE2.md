@@ -1181,9 +1181,58 @@ vaults = clients.keyvault.vaults.list_by_subscription()
 ## 5.3 CVSS (cvss.py)
 
 ### What It Does
-Maps rule codes to severity levels.
+Maps rule codes to CVSS 3.1 scores and severity levels, using the industry-standard vulnerability rating scale.
+
+### Background: What is CVSS?
+CVSS (Common Vulnerability Scoring System) 3.1 is an industry standard for rating the severity of security vulnerabilities on a scale from 0.0 to 10.0:
+- **0.0** = No severity
+- **1.0-3.9** = Low severity (minor issues)
+- **4.0-6.9** = Medium severity (notable issues)
+- **7.0-8.9** = High severity (serious issues)
+- **9.0-10.0** = Critical severity (urgent issues)
+
+By using CVSS scoring, security teams can prioritize which vulnerabilities need immediate attention.
 
 ### Code Breakdown
+
+```python
+RULE_CVSS = {
+    "NSG_WORLD_SSH": 9.8,
+    "NSG_WORLD_RDP": 9.8,
+    "STG_PUBLIC_BLOB": 9.1,
+    "NSG_WORLD_HTTP": 7.5,
+    "KV_NO_PURGE_PROTECTION": 6.5,
+}
+```
+**What:** Dictionary mapping rule codes to CVSS 3.1 scores (0.0-10.0 scale)  
+**Plain English:** Each security rule has a CVSS score that reflects how severe that vulnerability is. Here's what each score means:
+- **NSG_WORLD_SSH (9.8)** = Critical - SSH exposed to the world allows remote code execution
+- **NSG_WORLD_RDP (9.8)** = Critical - RDP exposed to the world allows remote code execution
+- **STG_PUBLIC_BLOB (9.1)** = Critical - Public blob storage means sensitive data is exposed
+- **NSG_WORLD_HTTP (7.5)** = High - HTTP exposed allows attackers to scan and exploit
+- **KV_NO_PURGE_PROTECTION (6.5)** = Medium - Deleted secrets could be recovered by attackers
+
+---
+
+```python
+def cvss_for(rule: str) -> float:
+    return RULE_CVSS.get(rule, 0.0)
+```
+**What:** Function to look up CVSS score for a rule  
+**Plain English:**
+- Takes a rule code (e.g., "NSG_WORLD_SSH")
+- Looks it up in the CVSS dictionary
+- Returns the CVSS score (e.g., 9.8)
+- If rule doesn't exist, returns 0.0 as default (no severity)
+
+**Example:**
+```python
+cvss_for("NSG_WORLD_SSH")     # Returns 9.8 (Critical)
+cvss_for("KV_NO_PURGE_PROTECTION")  # Returns 6.5 (Medium)
+cvss_for("UNKNOWN_RULE")      # Returns 0.0 (No data)
+```
+
+---
 
 ```python
 RULE_SEVERITY = {
@@ -1194,8 +1243,8 @@ RULE_SEVERITY = {
     "KV_NO_PURGE_PROTECTION": "Medium",
 }
 ```
-**What:** Dictionary mapping rule codes to severity  
-**Plain English:** A simple lookup table that says "NSG_WORLD_SSH is High severity, STG_PUBLIC_BLOB is High severity," etc.
+**What:** Dictionary mapping rule codes to simplified severity levels  
+**Plain English:** A simplified severity categorization for quick scanning. These are derived from the CVSS scores but grouped into broader categories.
 
 ---
 
@@ -1203,11 +1252,11 @@ RULE_SEVERITY = {
 def severity_for(rule: str) -> str:
     return RULE_SEVERITY.get(rule, "Low")
 ```
-**What:** Function to look up severity for a rule  
+**What:** Function to look up severity level for a rule  
 **Plain English:**
 - Takes a rule code (e.g., "NSG_WORLD_SSH")
-- Looks it up in the dictionary
-- Returns the severity (e.g., "High")
+- Looks it up in the severity dictionary
+- Returns the severity level (e.g., "High")
 - If rule doesn't exist, returns "Low" as default
 
 **Example:**
@@ -1215,6 +1264,28 @@ def severity_for(rule: str) -> str:
 severity_for("NSG_WORLD_SSH")  # Returns "High"
 severity_for("UNKNOWN_RULE")    # Returns "Low"
 ```
+
+### How CVSS Scoring Works in the Scanner
+
+When a finding is created, the CVSS score is automatically attached:
+
+```python
+# In test_reports.py (or when real Azure scan runs)
+finding = Finding(
+    id="AZ-NSG-WORLD-SSH",
+    service="nsg",
+    resource="nsg-prod",
+    rule="NSG_WORLD_SSH",
+    description="Network Security Group allows SSH from anywhere",
+    severity=severity_for("NSG_WORLD_SSH"),  # "High"
+    mitre=mitre_for("NSG_WORLD_SSH"),        # "T1046"
+    cvss_score=cvss_for("NSG_WORLD_SSH"),    # 9.8
+    references=["https://..."],
+    metadata={"port": 22}
+)
+```
+
+The Finding now includes `cvss_score=9.8`, which the HTML report displays with color-coding based on severity.
 
 ---
 
@@ -1260,7 +1331,84 @@ def mitre_for(rule: str) -> str:
 ## 5.5 REPORTER (reporter.py)
 
 ### What It Does
-Generates HTML and JSON reports from findings.
+Generates professional HTML and JSON reports from security findings, including CVSS 3.1 scores, severity indicators, and MITRE ATT&CK technique mappings.
+
+### The Enhanced HTML Template
+
+The reporter now generates a professional HTML report with:
+- **Color-coded severity** (Red for High, Orange for Medium, Green for Low)
+- **CVSS 3.1 scores** with color-coding based on severity
+- **MITRE ATT&CK technique** mappings for threat intelligence
+- **Responsive styling** with embedded CSS
+
+#### HTML Template Code:
+
+```python
+HTML_TEMPLATE = """
+<html>
+<head>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    .finding { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    .severity { font-weight: bold; }
+    .high { color: #d9534f; }
+    .medium { color: #f0ad4e; }
+    .low { color: #5cb85c; }
+    .cvss { font-weight: bold; margin: 10px 0; }
+    .mitre { color: #0275d8; }
+</style>
+</head>
+<body>
+<h1>Cloud Security Scan Report</h1>
+<p>Scan completed: {{ timestamp }}</p>
+{% if findings %}
+    {% for f in findings %}
+    <div class="finding">
+        <h3>{{ f.id }}</h3>
+        <p>{{ f.description }}</p>
+        <p class="severity {{ f.severity|lower }}"><strong>Severity:</strong> {{ f.severity }}</p>
+        <div class="cvss {{ cvss_class }}"><strong>CVSS 3.1:</strong> {{ f.cvss_score }}</div>
+        <p><strong>Service:</strong> {{ f.service }}</p>
+        <p><strong>Resource:</strong> {{ f.resource }}</p>
+        <p><strong>Rule:</strong> {{ f.rule }}</p>
+        <div class="mitre"><strong>MITRE ATT&CK:</strong> {{ f.mitre }}</div>
+    </div>
+    {% endfor %}
+{% else %}
+    <p><em>No security findings detected. Your cloud resources are properly configured!</em></p>
+{% endif %}
+</body>
+</html>
+"""
+```
+
+**Template Breakdown:**
+- `<style>...</style>` - Embedded CSS styling for professional appearance
+- `.high`, `.medium`, `.low` - Severity color classes (red, orange, green)
+- `{{ f.cvss_score }}` - Displays CVSS 3.1 score
+- `{{ f.mitre }}` - Displays MITRE technique identifier
+- `{% if findings %}...{% else %}...{% endif %}` - Shows "no findings" message if scan is clean
+
+#### CVSS Color-Coding Logic:
+
+```python
+# In the rendering function, determine CVSS color class
+if f.cvss_score >= 9.0:
+    cvss_class = "critical"  # Dark red background
+elif f.cvss_score >= 7.0:
+    cvss_class = "high"       # Red background
+elif f.cvss_score >= 4.0:
+    cvss_class = "medium"     # Orange background
+else:
+    cvss_class = "low"        # Green background
+```
+
+**Plain English:** Each finding's CVSS score gets a color based on its severity:
+- 9.0+ = Dark Red (Critical)
+- 7.0-8.9 = Red (High)
+- 4.0-6.9 = Orange (Medium)
+- Below 4.0 = Green (Low)
 
 ### Code Breakdown
 
@@ -1269,30 +1417,12 @@ import os, json
 from jinja2 import Template
 from datetime import datetime
 ```
-**What:** Import required libraries
-
----
-
-```python
-HTML_TEMPLATE = "<html><body><h1>Cloud Report</h1>{% for f in findings %}<p>{{f.id}} - {{f.description}} ({{f.severity}})</p>{% endfor %}</body></html>"
-```
-**What:** HTML template with placeholders  
+**What:** Import required libraries  
 **Plain English:**
-- `{% for f in findings %}` - Loop through findings
-- `{{f.id}}` - Insert finding ID
-- `{{f.description}}` - Insert description
-- `{{f.severity}}` - Insert severity
-
-**Example Output:**
-```html
-<html>
-<body>
-<h1>Cloud Report</h1>
-<p>AZ-NSG-WORLD-SSH - World access to 22 (High)</p>
-<p>AZ-STG-PUBLIC-BLOB - Public blob access enabled (High)</p>
-</body>
-</html>
-```
+- `os` - For file/directory operations
+- `json` - For JSON report generation
+- `Template` from jinja2 - For rendering HTML templates with placeholders
+- `datetime` - For timestamp in reports
 
 ---
 
@@ -1303,7 +1433,7 @@ def write_html(provider, findings, out_path):
 **Parameters:**
 - `provider` - Cloud provider ("azure", "gcp", "aws")
 - `findings` - List of Finding objects
-- `out_path` - Where to save the file
+- `out_path` - Where to save the file (e.g., "reports/scan.html")
 
 ---
 
@@ -1311,25 +1441,22 @@ def write_html(provider, findings, out_path):
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 ```
 **What:** Create directory if it doesn't exist  
-**Plain English:** If the directory `reports/` doesn't exist, create it
+**Plain English:** If the directory `reports/` doesn't exist, create it. If it already exists, don't error out.
 
 ---
 
 ```python
-    from jinja2 import Template
-```
-**What:** Import Jinja2 Template (redundant, already imported at top)
-
----
-
-```python
-    html = Template(HTML_TEMPLATE).render(findings=findings)
+    html = Template(HTML_TEMPLATE).render(
+        findings=findings,
+        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
 ```
 **What:** Render template with findings data  
 **Plain English:**
 - Take the HTML template
-- Replace `{% for f in findings %}` with actual findings
-- Replace `{{f.id}}` with actual finding IDs, etc.
+- Replace `{% for f in findings %}...{% endfor %}` with actual findings
+- Replace `{{ f.id }}`, `{{ f.description }}`, etc. with actual values
+- Replace `{{ timestamp }}` with current date/time
 - Return final HTML string
 
 ---
@@ -1339,14 +1466,15 @@ def write_html(provider, findings, out_path):
         f.write(html)
 ```
 **What:** Write HTML to file  
-**Plain English:** Save the rendered HTML to the specified file path
+**Plain English:** Save the rendered HTML to the specified file path (e.g., "reports/scan.html")
 
 ---
 
 ```python
 def write_json(findings, out_path):
 ```
-**What:** Function to write JSON report
+**What:** Function to write JSON report  
+**Plain English:** Convert findings to JSON format for programmatic processing
 
 ---
 
@@ -1364,24 +1492,48 @@ def write_json(findings, out_path):
 **What:** Write findings as JSON  
 **Plain English:**
 - `[f.__dict__ for f in findings]` - Convert each Finding object to a dictionary
-- `json.dump(..., f, indent=2)` - Write to file with nice formatting (indent=2)
+- `json.dump(..., f, indent=2)` - Write to file with nice formatting (indent=2 for readability)
 
 **Output Example:**
 ```json
 [
   {
     "id": "AZ-NSG-WORLD-SSH",
-    "service": "NSG",
-    "resource": "my-rg/my-nsg/allow-ssh",
+    "service": "nsg",
+    "resource": "my-rg/my-nsg",
     "rule": "NSG_WORLD_SSH",
     "description": "World access to 22",
     "severity": "High",
     "mitre": "T1046",
-    "references": [],
-    "metadata": {}
+    "cvss_score": 9.8,
+    "references": ["https://..."],
+    "metadata": {"port": 22}
   }
 ]
 ```
+
+### How the Finding Model Includes CVSS
+
+The `Finding` dataclass was updated to include the CVSS score field:
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Finding:
+    id: str
+    service: str
+    resource: str
+    rule: str
+    description: str
+    severity: str
+    mitre: str
+    cvss_score: float = 0.0  # NEW: CVSS 3.1 score (0.0-10.0)
+    references: list = None
+    metadata: dict = None
+```
+
+**Plain English:** When a Finding is created, it now includes a `cvss_score` field that gets populated automatically from the `cvss_for()` function in the CVSS module.
 
 ---
 
@@ -2032,6 +2184,7 @@ sample_findings = [
         description="Network Security Group allows world-accessible SSH (port 22)",
         severity="High",
         mitre="T1046",
+        cvss_score=9.8,
         references=["https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview"],
         metadata={"port": 22, "source": "0.0.0.0/0"}
     ),
@@ -2043,9 +2196,79 @@ sample_findings = [
         description="Network Security Group allows world-accessible RDP (port 3389)",
         severity="High",
         mitre="T1046",
+        cvss_score=9.8,
         references=["https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview"],
         metadata={"port": 3389, "source": "0.0.0.0/0"}
     ),
+    Finding(
+        id="AZ-STG-PUBLIC-BLOB",
+        service="Storage",
+        resource="prodstorageacct",
+        rule="STG_PUBLIC_BLOB",
+        description="Storage Account has public blob access enabled",
+        severity="High",
+        mitre="T1530",
+        cvss_score=9.1,
+        references=["https://docs.microsoft.com/azure/storage/blobs/anonymous-read-access-configure"],
+        metadata={"account_type": "StorageV2"}
+    ),
+    Finding(
+        id="AZ-KV-PURGE-PROTECTION-DISABLED",
+        service="KeyVault",
+        resource="prod-keyvault-001",
+        rule="KV_NO_PURGE_PROTECTION",
+        description="Key Vault does not have purge protection enabled",
+        severity="Medium",
+        mitre="T1211",
+        cvss_score=6.5,
+        references=["https://docs.microsoft.com/azure/key-vault/general/soft-delete-overview"],
+        metadata={"location": "eastus"}
+    ),
+    Finding(
+        id="AZ-NSG-WORLD-HTTP",
+        service="NSG",
+        resource="dev-rg/web-nsg/allow-http",
+        rule="NSG_WORLD_HTTP",
+        description="Network Security Group allows world-accessible HTTP (port 80)",
+        severity="Medium",
+        mitre="T1190",
+        cvss_score=7.5,
+        references=["https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview"],
+        metadata={"port": 80, "source": "0.0.0.0/0"}
+    ),
+]
+```
+
+**What:** Create a list of sample Finding objects  
+**Plain English:** 
+- We create 5 different vulnerability findings representing real security issues
+- Each includes: ID, service type, resource name, rule code, description, severity, MITRE technique, **CVSS score**, and additional metadata
+- Mix of High (CVSS 7.0+) and Medium (CVSS 4.0-6.9) severity items
+
+**CVSS Scores in Sample Findings:**
+- **SSH World-Open (9.8)** - Critical remote code execution risk
+- **RDP World-Open (9.8)** - Critical remote code execution risk
+- **Public Blob Storage (9.1)** - Critical data exposure risk
+- **HTTP World-Open (7.5)** - High attack surface exposure
+- **KeyVault No Purge Protection (6.5)** - Medium recovery risk
+
+**Why Multiple Examples?** 
+- Tests different service types (NSG, Storage, KeyVault)
+- Tests different severity levels (High, Medium, Critical)
+- Shows variety in real-world reports
+- Demonstrates realistic CVSS score ranges
+
+**Each Finding Contains:**
+- `id` - Unique identifier (e.g., "AZ-NSG-WORLD-SSH")
+- `service` - Which Azure service (NSG, Storage, KeyVault)
+- `resource` - Specific resource name/path
+- `rule` - Rule code (e.g., "NSG_WORLD_SSH")
+- `description` - What the vulnerability is and why it matters
+- `severity` - How bad: High (7.0+), Medium (4.0-6.9), Low (<4.0)
+- `mitre` - MITRE ATT&CK technique (e.g., T1046, T1530)
+- `cvss_score` - Numerical CVSS 3.1 score (0.0-10.0 scale)
+- `references` - Links to Azure documentation
+- `metadata` - Extra details (port numbers, locations, account types, etc.)
     Finding(
         id="AZ-STG-PUBLIC-BLOB",
         service="Storage",

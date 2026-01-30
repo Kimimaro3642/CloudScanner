@@ -243,7 +243,41 @@ Use `os.path.dirname(__file__)` for cross-platform path resolution. Absolute imp
 
 ## Potential Issues (Anticipated)
 
-### Issue #9: Azure Credentials in Environment Variables
+### Issue #10: CVSS Scoring Integration
+**Status:** ✅ RESOLVED (Jan 30, 2026)  
+**Description:**
+Initial HTML report template only showed findings without CVSS scores. Users couldn't see industry-standard vulnerability severity ratings.
+
+**Solution:**
+- Added `cvss_score` field to Finding dataclass (with default 0.0)
+- Created `RULE_CVSS` mapping with CVSS 3.1 scores (0.0-10.0 scale)
+- Added `cvss_for()` function to retrieve CVSS score for any rule
+- Enhanced HTML template to display CVSS scores with color coding:
+  - Critical (9.0+): Dark red background
+  - High (7.0+): Red background
+  - Medium (4.0+): Orange background
+  - Low (<4.0): Green background
+- Updated test_reports.py with realistic CVSS scores for all sample findings
+
+**CVSS Scores Assigned:**
+- NSG_WORLD_SSH: 9.8 (Critical - Remote execution)
+- NSG_WORLD_RDP: 9.8 (Critical - Remote execution)
+- STG_PUBLIC_BLOB: 9.1 (Critical - Data exposure)
+- NSG_WORLD_HTTP: 7.5 (High - Attack exposure)
+- KV_NO_PURGE_PROTECTION: 6.5 (Medium - Recovery risk)
+
+**Files Modified:**
+- scanner/src/core/model.py
+- scanner/src/core/cvss.py
+- scanner/src/core/reporter.py
+- test_reports.py
+
+**Lesson Learned:**
+CVSS scoring is critical for security professionals to prioritize remediation. Integrating industry-standard scores makes findings actionable and comparable to other vulnerability scanners.
+
+---
+
+### Issue #11: Azure Credentials in Environment Variables
 **Status:** Not yet encountered  
 **Anticipated:** When connecting to live Azure environment  
 **Mitigation:**
@@ -324,4 +358,4 @@ Use `os.path.dirname(__file__)` for cross-platform path resolution. Absolute imp
 ---
 
 **Last Updated:** Jan 30, 2026  
-**Total Issues:** 13 (10 resolved, 3 anticipated)
+**Total Issues:** 14 (11 resolved, 3 anticipated)

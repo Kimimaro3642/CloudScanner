@@ -2,161 +2,141 @@
 
 A Python-based security scanner that audits Azure resources for vulnerabilities and misconfigurations.
 
-## Features
+## What This Scanner Does
 
-- **NSG Security Rules** - Detects world-accessible ports (SSH, RDP, HTTP)
-- **Storage Account Access** - Identifies publicly accessible blob containers
-- **Key Vault Protection** - Checks for disabled purge protection
-- **MITRE ATT&CK Mapping** - Correlates findings with threat tactics
-- **HTML & JSON Reports** - Generates actionable security reports
+The scanner checks three categories of Azure security misconfigurations.
+
+Network Security Groups
+- Detects security group rules that allow world-accessible ports (SSH on 22, RDP on 3389, HTTP on 80)
+
+Storage Accounts
+- Identifies storage accounts with public blob container access enabled
+
+Key Vaults
+- Checks for key vaults that do not have purge protection enabled
+
+Each finding includes CVSS 3.1 scoring (industry standard severity rating) and MITRE ATT&CK technique mapping.
 
 ## Quick Start
 
-### Prerequisites
-- Python 3.9+
-- Azure subscription with credentials
-- Virtual environment activated
+Prerequisites.
+- Python 3.9 or later
+- Azure subscription
+- Azure credentials (subscription ID, client ID, secret, tenant ID)
 
-### Installation
+Installation.
+
+Create and activate a virtual environment.
 
 ```bash
-# Create virtual environment
 python -m venv .venv
 
-# Activate (Windows)
+# Windows
 .venv\Scripts\activate
 
-# Activate (macOS/Linux)
+# macOS/Linux
 source .venv/bin/activate
+```
 
-# Install production dependencies
+Install dependencies.
+
+```bash
+# Production dependencies only
 pip install -r requirements.txt
 
-# (Optional) Install development/testing dependencies
+# Add these if you want to run tests
 pip install -r requirements-dev.txt
 ```
 
-**Note:** `requirements.txt` contains production dependencies (Azure SDKs, Jinja2, CVSS). `requirements-dev.txt` contains testing tools (pytest, pytest-cov). Install both to run tests locally.
+Configure Azure credentials.
 
-### Configuration
+Create a file named `.env` in the project root with your Azure details.
 
-Create a `.env` file with your Azure credentials:
-
-```env
+```
 AZURE_SUBSCRIPTION_ID=your-subscription-id
 AZURE_CLIENT_ID=your-client-id
 AZURE_CLIENT_SECRET=your-client-secret
 AZURE_TENANT_ID=your-tenant-id
 ```
 
-### Running the Scanner
+## Running the Scanner
 
-#### Option 1: Manual (Local Python)
+Option 1: Using Python directly.
 
-**Prerequisites:**
-- Virtual environment activated with dependencies installed
-- `.env` file with Azure credentials
+Run the scanner with default settings (outputs to reports/run.html and reports/run.json).
 
-**Run the scanner:**
 ```bash
-# With default output paths (reports/run.html, reports/run.json)
 python scanner/src/main.py
-
-# With custom output paths
-python scanner/src/main.py --out my_report.html --json my_results.json
-
-# Just JSON output
-python scanner/src/main.py --json findings.json --out /dev/null  # (Unix)
 ```
 
-Reports generated in:
-- `reports/run.html` - Formatted HTML report
-- `reports/run.json` - Structured JSON findings
+Run with custom output paths.
 
-#### Option 2: Docker Container
+```bash
+python scanner/src/main.py --out my_report.html --json my_findings.json
+```
 
-**Prerequisites:**
-- Docker installed and running
-- Azure credentials passed as environment variables
+Option 2: Using Docker.
 
-**Build the image (first time only):**
+Build the Docker image.
+
 ```bash
 docker build -t cloudscanner:latest -f scanner/Dockerfile .
 ```
 
-**Run the scanner in Docker:**
+Run the container with your Azure credentials passed as environment variables.
+
 ```bash
-# Basic run (outputs to container reports/)
-docker run \
-  -e AZURE_SUBSCRIPTION_ID="your-sub-id" \
-  -e AZURE_CLIENT_ID="your-client-id" \
-  -e AZURE_CLIENT_SECRET="your-secret" \
-  -e AZURE_TENANT_ID="your-tenant-id" \
+docker run -e AZURE_SUBSCRIPTION_ID=your-id \
+  -e AZURE_CLIENT_ID=your-client \
+  -e AZURE_CLIENT_SECRET=your-secret \
+  -e AZURE_TENANT_ID=your-tenant \
+  -v $(pwd)/reports:/app/reports \
   cloudscanner:latest
-
-# Run with custom output paths and mount reports folder
-docker run \
-  -e AZURE_SUBSCRIPTION_ID="your-sub-id" \
-  -e AZURE_CLIENT_ID="your-client-id" \
-  -e AZURE_CLIENT_SECRET="your-secret" \
-  -e AZURE_TENANT_ID="your-tenant-id" \
-  -v %cd%\reports:/app/reports \
-  cloudscanner:latest \
-  python -m scanner.src.main --out reports/run.html --json reports/run.json
 ```
 
-**View Docker logs:**
-```bash
-docker logs <container-id>  # Get output from the container
-```
+Option 3: Generate sample reports (no Azure credentials needed).
 
-### Generate Test Reports
-
-To see what reports look like WITHOUT needing real Azure credentials:
+Use this to see what reports look like without Azure access.
 
 ```bash
-# Generate sample findings and reports
 python test_reports.py
 ```
 
-This creates:
-- `reports/test_run.html` - Example HTML report with sample findings
-- `reports/test_run.json` - Example JSON output
+This creates sample findings and generates reports/test_run.html and reports/test_run.json.
 
-Then view the HTML report:
-```bash
-# Windows
-start reports/test_run.html
+## Report Format
 
-# macOS/Linux
-open reports/test_run.html
-```
+HTML Reports
+- Color-coded severity (red for high, orange for medium, green for low)
+- CVSS 3.1 scores with severity coloring
+- MITRE ATT&CK technique mappings
+- Service, resource, and rule information
+- References to documentation
+
+JSON Reports
+- Structured format suitable for processing
+- Contains all finding details
+- CVSS scores included
+- Can be imported into other tools
 
 ## Testing
 
+Run the unit tests to verify the scanner works.
+
 ```bash
-# Run unit tests
-pytest scanner/tests/
-
-# Run with coverage report
-pytest scanner/tests/ --cov=scanner/src --cov-report=html
-
-# View coverage in browser
-start htmlcov/index.html
+python -m pytest scanner/tests/ -v
 ```
 
-## Code Quality
+Run with coverage report.
 
 ```bash
-# Lint with pylint
-pylint scanner/src/
-
-# Format check with flake8
-flake8 scanner/src/
+python -m pytest scanner/tests/ -v --cov=scanner/src --cov-report=html
 ```
 
 ## Documentation
 
 - **[REFERENCE.md](REFERENCE.md)** - Comprehensive line-by-line explanation of all code
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and component overview
+- **[REFERENCE2.md](REFERENCE2.md)** - Detailed technical reference
 - **[TESTING.md](TESTING.md)** - Detailed testing guide
+- **[PROGRESS.md](PROGRESS.md)** - Project progress and status
+- **[ISSUES.md](ISSUES.md)** - Known issues and solutions

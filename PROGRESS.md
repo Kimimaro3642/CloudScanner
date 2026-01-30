@@ -1,91 +1,118 @@
 # Project Progress
 
-## Sessions & Milestones
+## Overview
+This document tracks the progress of the CloudScanner project from start to current state. Updated as work is completed.
 
-### Session 1: Project Setup & Foundation (Jan 9-12)
-- ✅ Project scaffold & directory structure (41 files)
-- ✅ Unit tests created (6/6 passing, 47% coverage)
-- ✅ CI/CD workflows setup (tests.yml, scan.yml)
-- ✅ GitHub repository created and synced
-- ✅ Dockerfile created and tested
-- ✅ Docker image built successfully (`cloudscanner:latest`)
+## Session 1: Project Foundation (January 9-12)
 
-### Session 2: Codebase Documentation & Enhancement (Jan 30)
-- ✅ Deep dive into codebase - all files documented
-- ✅ Test reports generation (test_reports.py script)
-- ✅ HTML report enhancements (MITRE mapping, CSS styling)
-- ✅ CVSS 3.1 scoring integration (0.0-10.0 scale)
-- ✅ Live scanner CVSS integration (all check functions)
-- ✅ Dependency management (requirements.txt vs requirements-dev.txt)
-- ✅ Plain English reference documentation (REFERENCE.md in progress)
-- ✅ Repository cleanup & refactoring (removed linting configs, simplified docs)
+Project setup and initial infrastructure.
 
-### Repository Cleanup Rationale (Jan 30)
-**Deleted 6 files to simplify capstone submission:**
-- `.flake8` & `.pylintrc` - Code style linters (enforce PEP 8, not functional tests)
-- `ARCHITECTURE.md` - Redundant (covered in REFERENCE.md)
-- `CONTRIBUTING.md` - Not needed for capstone
-- `SECURITY.md` - Not needed for capstone
-- `REFERENCE2.md` - User rewriting in simplified REFERENCE.md format
+- Created project structure with 41 files
+- Set up directory layout for Python package
+- Created 6 unit tests (all passing)
+- Set up test coverage reporting
+- Created CI/CD workflows (tests.yml for automated testing, scan.yml for scheduled security scans)
+- Initialized GitHub repository and pushed all files
+- Created Dockerfile for containerization
+- Built Docker image successfully (cloudscanner:latest)
+- Verified Docker image runs correctly
 
-**Reasoning:** For a capstone project, what matters is:
-- ✅ **Working code** (tests pass)
-- ✅ **Clear documentation** (REFERENCE.md)
-- ✅ **Demonstrated understanding** (your simplified writing style)
+## Session 2: Documentation and Code Enhancement (January 30)
 
-What doesn't matter:
-- ❌ Style enforcement (linters check variable naming, line length)
-- ❌ Code quality scores (important for production, not capstone demo)
-- ❌ Multiple documentation files (cleaner with one comprehensive REFERENCE.md)
+Deep dive into codebase with comprehensive documentation and feature additions.
 
-**Refactored for clarity:**
-- `PROGRESS.md` - Restructured to session-based format
-- `ISSUES.md` - Added category-based quick reference
+### Codebase Understanding
+- Documented all files and their purposes
+- Analyzed entry points (main.py, scan.py)
+- Reviewed all three security check functions (NSG, Storage, KeyVault)
+- Understood core utilities (model, clients, cvss, mitre, reporter)
+- Reviewed test patterns and coverage
+- Examined configuration files and CI/CD workflows
+
+### Feature Additions
+- Created test_reports.py script for generating sample security reports without Azure credentials
+- Added MITRE ATT&CK technique mapping display to HTML reports
+- Added CSS styling to HTML reports for better readability
+- Implemented CVSS 3.1 scoring system (0.0-10.0 scale)
+- Added color-coded severity display to HTML reports (red for high, orange for medium, green for low)
+- Updated all three check functions (nsg.py, storage.py, keyvault.py) to populate CVSS scores
+- Verified all 6 unit tests still pass after CVSS integration
+- Confirmed test_reports.py generates valid reports with CVSS scores
+
+### Dependency Management
+- Separated production and development dependencies
+- Created requirements-dev.txt for testing tools (pytest, pytest-cov)
+- Kept requirements.txt for production dependencies only
+- Updated README.md with installation instructions for both files
+- Documented reasoning for dependency separation in ISSUES.md
+
+### Repository Cleanup
+- Removed unnecessary configuration files (.flake8, .pylintrc)
+- Removed redundant documentation files (ARCHITECTURE.md, CONTRIBUTING.md, SECURITY.md)
+- Kept REFERENCE2.md as detailed technical reference for learning
+- Restructured PROGRESS.md to session-based format
+- Added category-based quick reference to ISSUES.md
+- Documented all decisions and reasoning in tracking files
 
 ## Current Status
 
-**Code & Testing:**
+Code is complete and functional.
+
 - 6 unit tests passing (NSG, Storage, KeyVault - 2 tests each)
-- 47% code coverage
-- No spurious code - all files necessary
-- All 3 check functions updated with CVSS 3.1 scores
-- HTML/JSON reports include color-coded severity, MITRE mappings, CVSS scores
+- Test coverage at 47%
+- No spurious or unused code
+- All three check functions have CVSS 3.1 scoring
+- HTML reports include MITRE mappings, CVSS scores, and color-coding
+- JSON reports include all finding details
+- Docker image builds and runs successfully
+- Sample reports generate without Azure credentials needed
 
-**Documentation:**
-- REFERENCE.md - In progress (simplified plain English version)
-- REFERENCE2.md - Working reference (detailed line-by-line breakdown)
-- README.md - Complete (quick start, manual & Docker instructions)
-- TESTING.md - Complete (test running instructions)
-- ISSUES.md - Complete (12 resolved issues, 4 anticipated)
+Documentation status.
 
-**Deployment Ready:**
-- Docker image builds and runs ✅
-- Tests pass locally ✅
-- Sample reports generate correctly ✅
-- Live scanner ready for Azure credentials ✅
+- REFERENCE2.md: Detailed line-by-line breakdown of all code (working reference)
+- REFERENCE.md: Simplified plain English version in progress (shows understanding)
+- README.md: Complete with quick start and running instructions
+- TESTING.md: Complete with test running guidance
+- ISSUES.md: Complete with 12 resolved issues and lessons learned
+- PROGRESS.md: Complete (this document)
 
 ## Next Phase
-- Complete REFERENCE.md (user rewriting in simplified format)
-- Terraform infrastructure code (main.tf, variables.tf, outputs.tf)
-- Live Azure environment testing
-- Final capstone report
 
-## Key Commands
-```bash
-# Run tests
-python -m pytest scanner/tests/ -v --cov=scanner/src
+Terraform infrastructure code.
 
-# Generate sample reports (no Azure credentials needed)
+- Design main.tf for Azure Container Instance deployment
+- Create variables.tf for input configuration
+- Define outputs.tf for deployment results
+- Set up state management strategy
+
+Live Azure environment testing.
+
+- Run scanner against real Azure resources with actual credentials
+- Test all three check functions in production environment
+- Verify report generation with real findings
+
+Final capstone deliverables.
+
+- Complete REFERENCE.md rewrite (learning and interpretation)
+- Prepare final capstone report
+- Code review and documentation polish
+
+## How to Run
+
+Generate sample reports (no Azure credentials needed).
+
 python test_reports.py
 
-# Build Docker image
+Run tests locally.
+
+python -m pytest scanner/tests/ -v --cov=scanner/src
+
+Build Docker image.
+
 docker build -t cloudscanner:latest -f scanner/Dockerfile .
 
-# Verify repository
-git status
-git log --oneline
-```
+## Repository Information
 
-## Repository
-- GitHub: https://github.com/Kimimaro3642/CloudScanner
-- Last updated: Jan 30, 2026
+GitHub: https://github.com/Kimimaro3642/CloudScanner
+Last updated: January 30, 2026
+Commits: 20+ (see git log for history)

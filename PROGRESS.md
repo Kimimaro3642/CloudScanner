@@ -40,6 +40,11 @@
   - ✅ Verified all 6 unit tests pass with CVSS integration
   - ✅ Confirmed test_reports.py generates CVSS scores in HTML/JSON
   - ✅ Live scanner now ready to report CVSS 3.1 scores in production
+- **Dependency management** (COMPLETED Jan 30)
+  - ✅ Created requirements-dev.txt for pytest and pytest-cov
+  - ✅ Separated production and development dependencies
+  - ✅ Updated README.md with installation instructions
+  - ✅ Documented dependency separation as lesson learned
 - **Next: Terraform infrastructure code**
   - Design main.tf for ACI deployment
   - Create variables.tf for inputs

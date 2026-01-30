@@ -27,12 +27,34 @@
 
 ---
 
-# 1. DEPENDENCIES (requirements.txt)
+# 1. DEPENDENCIES
 
-## What This File Does
-Lists every Python library the scanner needs. When you run `pip install -r requirements.txt`, it downloads and installs all these libraries.
+## What These Files Do
 
-## Line-by-Line Breakdown
+Two separate files manage dependencies:
+
+### **requirements.txt** - Production Dependencies
+Lists every Python library the scanner needs to run in production. When you run `pip install -r requirements.txt`, it downloads and installs all production libraries.
+
+**Contains:** Azure SDKs, Jinja2, CVSS, requests
+
+### **requirements-dev.txt** - Development/Testing Dependencies
+Lists Python libraries needed only for development and testing. Install this if you want to run tests locally.
+
+**Contains:** pytest, pytest-cov
+
+## Why Separate?
+
+**Production Environment:**
+- Only needs requirements.txt (smaller, fewer dependencies)
+- Docker image includes only what's needed to run the scanner
+- Faster deployments, smaller footprint
+
+**Development Environment:**
+- Install both files to have testing tools available
+- Run: `pip install -r requirements.txt -r requirements-dev.txt`
+
+## Line-by-Line Breakdown (requirements.txt)
 
 ### **Line 1: `azure-identity==1.17.1`**
 
@@ -216,6 +238,56 @@ When you type a URL in your browser, your browser makes an HTTP request to a ser
 | `jinja2` | HTML templates | ✅ YES | Renders HTML reports |
 | `cvss` | Severity scoring | ❌ Partially | Unused, replaced by mappings |
 | `requests` | HTTP requests | ⚠️ Indirect | Used by Azure libraries |
+
+---
+
+## **DEVELOPMENT DEPENDENCIES (requirements-dev.txt)**
+
+For development and testing, two additional packages are available in `requirements-dev.txt`:
+
+### **`pytest==9.0.2`**
+**What:** Test framework and runner  
+**Purpose:** Execute and report on unit tests  
+**Plain English:** 
+- Finds all test files (test_*.py)
+- Runs each test function
+- Reports which tests passed/failed
+- Can generate coverage reports
+
+**Usage:**
+```bash
+pip install -r requirements-dev.txt
+python -m pytest scanner/tests/ -v
+```
+
+### **`pytest-cov==7.0.0`**
+**What:** Coverage plugin for pytest  
+**Purpose:** Measure how much code the tests actually run  
+**Plain English:**
+- Tracks which lines of code are executed during tests
+- Shows percentage of code covered by tests
+- Generates HTML coverage reports (htmlcov/)
+- Helps identify untested code paths
+
+**Usage:**
+```bash
+python -m pytest scanner/tests/ --cov=scanner/src --cov-report=html
+# Creates htmlcov/index.html with coverage details
+```
+
+### **Installing for Development**
+
+```bash
+# Option 1: Install both at once
+pip install -r requirements.txt -r requirements-dev.txt
+
+# Option 2: Install separately
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Option 3: For quick setup
+pip install -r requirements.txt && pip install pytest pytest-cov
+```
 
 ---
 

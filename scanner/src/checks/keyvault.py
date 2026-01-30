@@ -1,5 +1,5 @@
 from ..core.model import Finding
-from ..core.cvss import severity_for
+from ..core.cvss import severity_for, cvss_for
 from ..core.mitre import mitre_for
 
 def check_keyvault_purge_protection(kv):
@@ -12,6 +12,7 @@ def check_keyvault_purge_protection(kv):
                 resource=v.name,rule="KV_NO_PURGE_PROTECTION",
                 description="Purge protection disabled",
                 severity=severity_for("KV_NO_PURGE_PROTECTION"),
-                mitre=mitre_for("KV_NO_PURGE_PROTECTION")
+                mitre=mitre_for("KV_NO_PURGE_PROTECTION"),
+                cvss_score=cvss_for("KV_NO_PURGE_PROTECTION")
             ))
     return findings

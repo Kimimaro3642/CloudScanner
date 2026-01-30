@@ -1,5 +1,5 @@
 from ..core.model import Finding
-from ..core.cvss import severity_for
+from ..core.cvss import severity_for, cvss_for
 from ..core.mitre import mitre_for
 
 def check_nsg_world_open(net):
@@ -23,5 +23,6 @@ def check_nsg_world_open(net):
                     id=f"AZ-NSG-{code}",service="NSG",
                     resource=f"{rg}/{nsg.name}/{r.name}",
                     rule=code,description=f"World access to {port}",
-                    severity=severity_for(code),mitre=mitre_for(code)))
+                    severity=severity_for(code),mitre=mitre_for(code),
+                    cvss_score=cvss_for(code)))
     return findings

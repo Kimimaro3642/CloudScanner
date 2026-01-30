@@ -3,11 +3,11 @@
 ## Quick Reference
 
 ```bash
-# Run all tests
-pytest
+# Run all unit tests
+pytest scanner/tests/
 
-# Run with coverage
-pytest --cov=scanner/src --cov-report=html
+# Run with coverage report
+pytest scanner/tests/ --cov=scanner/src --cov-report=html
 
 # Run specific test file
 pytest scanner/tests/test_nsg.py -v
@@ -15,6 +15,27 @@ pytest scanner/tests/test_nsg.py -v
 # Run with detailed output
 pytest -vv -s
 ```
+
+## Generate Test Reports (Without Azure Credentials)
+
+If you want to see what findings reports look like without running against a real Azure subscription:
+
+```bash
+# Generate sample findings and create test reports
+python test_reports.py
+
+# View the HTML report in browser
+start reports/test_run.html      # Windows
+open reports/test_run.html       # macOS/Linux
+
+# View the JSON output
+cat reports/test_run.json
+```
+
+This is useful for:
+- Testing the report generation without Azure credentials
+- Demonstrating how the scanner's output looks
+- Development and documentation purposes
 
 ## Test Structure
 

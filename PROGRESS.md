@@ -7,13 +7,13 @@ This document tracks the progress of the CloudScanner project from start to curr
 
 Project setup and initial infrastructure.
 
-- Created project structure with 41 files
+- Created project structure
 - Set up directory layout for Python package
-- Created 6 unit tests (all passing)
+- Created 6 unit tests (all eventually passing)
 - Set up test coverage reporting
 - Created CI/CD workflows (tests.yml for automated testing, scan.yml for scheduled security scans)
 - Initialized GitHub repository and pushed all files
-- Created Dockerfile for containerization
+- Created Dockerfile for containerisation
 - Built Docker image successfully (cloudscanner:latest)
 - Verified Docker image runs correctly
 
@@ -23,7 +23,7 @@ Deep dive into codebase with comprehensive documentation and feature additions.
 
 ### Codebase Understanding
 - Documented all files and their purposes
-- Analyzed entry points (main.py, scan.py)
+- Analysed entry points (main.py, scan.py)
 - Reviewed all three security check functions (NSG, Storage, KeyVault)
 - Understood core utilities (model, clients, cvss, mitre, reporter)
 - Reviewed test patterns and coverage
@@ -34,7 +34,7 @@ Deep dive into codebase with comprehensive documentation and feature additions.
 - Added MITRE ATT&CK technique mapping display to HTML reports
 - Added CSS styling to HTML reports for better readability
 - Implemented CVSS 3.1 scoring system (0.0-10.0 scale)
-- Added color-coded severity display to HTML reports (red for high, orange for medium, green for low)
+- Added colour-coded severity display to HTML reports (red for high, orange for medium, green for low)
 - Updated all three check functions (nsg.py, storage.py, keyvault.py) to populate CVSS scores
 - Verified all 6 unit tests still pass after CVSS integration
 - Confirmed test_reports.py generates valid reports with CVSS scores
@@ -78,24 +78,121 @@ Documentation status.
 
 ## Next Phase
 
-Terraform infrastructure code.
+### Immediate: Additional Testing
 
-- Design main.tf for Azure Container Instance deployment
-- Create variables.tf for input configuration
-- Define outputs.tf for deployment results
-- Set up state management strategy
+- Expand test coverage beyond 47%
+- Add integration tests for full end-to-end pipeline
+- Test error handling (network failures, auth errors, missing resources)
+- Add tests for report generation with edge cases
+- Mock more complex Azure resource scenarios
 
-Live Azure environment testing.
+### Terraform: Vulnerable Lab Creation
+
+Create terraform/ directory with infrastructure-as-code for intentionally vulnerable Azure resources:
+
+- **azure_vulnerable_lab.tf** - Misconfigured resources to test scanner against
+  - NSG with world-accessible SSH (port 22) and RDP (port 3389)
+  - Storage account with public blob container access enabled
+  - Key Vault without purge protection enabled
+- **variables.tf** - Configuration for lab setup (location, naming conventions, resource group)
+- **outputs.tf** - Resource IDs and connection details for reference
+- **terraform.tfvars** - Lab environment variables and naming
+
+**Purpose:** Enable realistic testing by spinning up actual vulnerable resources, running scanner against them, then destroying to control costs.
+
+**Workflow:**
+```bash
+terraform init
+terraform plan
+terraform apply  # Creates vulnerable resources
+python scanner/src/main.py  # Scans them
+terraform destroy  # Cleans up
+```
+
+**Benefits:**
+- Tests scanner against real vulnerable configurations (not mocks)
+- Demonstrates scanner effectiveness with actual Azure misconfigurations
+- Infrastructure-as-Code documentation of what makes resources vulnerable
+- Allows realistic reporting against genuine findings
+
+### Live Azure Environment Testing
 
 - Run scanner against real Azure resources with actual credentials
 - Test all three check functions in production environment
 - Verify report generation with real findings
+- Validate CVSS scores and MITRE mappings in real-world context
 
-Final capstone deliverables.
+### Final Capstone Deliverables
 
 - Complete REFERENCE.md rewrite (learning and interpretation)
 - Prepare final capstone report
 - Code review and documentation polish
+
+## Stretch Goals
+
+### Scanner Deployment to Azure Container Instance
+
+Use Terraform to automate scanner deployment to cloud:
+
+- **azure_scanner_deployment.tf** - Azure Container Instance configuration
+  - Container image from cloudscanner:latest Docker image
+  - Environment variables for Azure credentials
+  - Persistent storage for report output
+- **variables.tf** - Deployment configuration (region, container specs, schedule)
+- **outputs.tf** - Container details and access information
+
+**Purpose:** Deploy scanner to Azure for scheduled automated scanning without local infrastructure.
+
+**Benefits:**
+- Scheduled security scans on a recurring basis
+- Reports stored in Azure storage for centralized access
+- No local machine required to run scanner
+- Infrastructure-as-Code for reproducible deployments
+
+### Multi-Cloud Support
+
+**Google Cloud Platform (Primary)**
+- Create check_gcp_compute.py for GCP Compute Engine security groups
+- Create check_gcp_storage.py for GCS bucket access controls
+- Create check_gcp_kms.py for Cloud KMS key rotation policies
+- Update reporter to support "gcp" provider
+- Add GCP credential handling in scan.py
+- Create GCP client wrapper similar to AzureClients
+
+**Amazon Web Services (Secondary)**
+- Create check_aws_security_groups.py for EC2 security group rules
+- Create check_aws_s3.py for S3 bucket public access
+- Create check_aws_kms.py for KMS key policies
+- Update reporter to support "aws" provider
+- Add AWS credential handling
+
+### Vulnerable Lab Creation with Terraform
+
+Create terraform/ directory with:
+- **azure_vulnerable_lab.tf** - Intentionally misconfigured Azure resources
+  - NSG with world-accessible SSH/RDP
+  - Storage account with public blob access
+  - Key Vault without purge protection
+- **variables.tf** - Configuration for lab setup
+- **outputs.tf** - Resource IDs and connection details
+- **terraform.tfvars** - Lab naming and location
+
+**Purpose:** Spin up real vulnerable resources to test scanner against, then tear down to control costs.
+
+**Usage:**
+```bash
+terraform init
+terraform plan
+terraform apply  # Creates vulnerable resources
+python scanner/src/main.py  # Scans them
+terraform destroy  # Cleans up
+```
+
+**Benefits:**
+- Tests scanner against actual vulnerable configurations
+- More realistic than mocked findings
+- Demonstrates scanner effectiveness with real resources
+- Infrastructure-as-Code documentation of vulnerabilities
 
 ## How to Run
 

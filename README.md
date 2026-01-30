@@ -2,6 +2,10 @@
 
 A Python-based security scanner that audits Azure resources for vulnerabilities and misconfigurations.
 
+## Disclosure
+
+This project's code and architecture were developed independently. Documentation formatting and language editing were assisted by GitHub Copilot.
+
 ## What This Scanner Does
 
 The scanner checks three categories of Azure security misconfigurations.

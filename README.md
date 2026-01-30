@@ -46,13 +46,71 @@ AZURE_TENANT_ID=your-tenant-id
 
 ### Running the Scanner
 
+#### Option 1: Manual (Local Python)
+
+**Prerequisites:**
+- Virtual environment activated with dependencies installed
+- `.env` file with Azure credentials
+
+**Run the scanner:**
 ```bash
+# With default output paths (reports/run.html, reports/run.json)
 python scanner/src/main.py
+
+# With custom output paths
+python scanner/src/main.py --out my_report.html --json my_results.json
+
+# Just JSON output
+python scanner/src/main.py --json findings.json --out /dev/null  # (Unix)
 ```
 
 Reports generated in:
 - `reports/run.html` - Formatted HTML report
 - `reports/run.json` - Structured JSON findings
+
+#### Option 2: Docker Container
+
+**Prerequisites:**
+- Docker installed and running
+- Azure credentials passed as environment variables
+
+**Build the image (first time only):**
+```bash
+docker build -t cloudscanner:latest -f scanner/Dockerfile .
+```
+
+**Run the scanner in Docker:**
+```bash
+# Basic run (outputs to container reports/)
+docker run \
+  -e AZURE_SUBSCRIPTION_ID="your-sub-id" \
+  -e AZURE_CLIENT_ID="your-client-id" \
+  -e AZURE_CLIENT_SECRET="your-secret" \
+  -e AZURE_TENANT_ID="your-tenant-id" \
+  cloudscanner:latest
+
+# Run with custom output paths and mount reports folder
+docker run \
+  -e AZURE_SUBSCRIPTION_ID="your-sub-id" \
+  -e AZURE_CLIENT_ID="your-client-id" \
+  -e AZURE_CLIENT_SECRET="your-secret" \
+  -e AZURE_TENANT_ID="your-tenant-id" \
+  -v %cd%\reports:/app/reports \
+  cloudscanner:latest \
+  python -m scanner.src.main --out reports/run.html --json reports/run.json
+```
+
+**View Docker logs:**
+```bash
+docker logs <container-id>  # Get output from the container
+```
+
+#### Which Method to Use?
+
+| Method | Best For | Requires |
+|--------|----------|----------|
+| **Manual** | Development, testing, debugging | Python 3.9+, .env file |
+| **Docker** | CI/CD, production, deployment, consistency | Docker installed |
 
 ### Generate Test Reports
 
@@ -102,6 +160,5 @@ flake8 scanner/src/
 ## Documentation
 
 - **[REFERENCE.md](REFERENCE.md)** - Comprehensive line-by-line explanation of all code
-- **[REFERENCE2.md](REFERENCE2.md)** - Backup copy of reference documentation  
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and component overview
 - **[TESTING.md](TESTING.md)** - Detailed testing guide

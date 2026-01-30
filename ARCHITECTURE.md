@@ -5,7 +5,7 @@
 CloudScanner is a multi-cloud security scanning platform designed to detect misconfigurations and security vulnerabilities across cloud resources. It uses a modular, extensible architecture to support multiple cloud providers.
 
 **Current Focus:** Azure (NSG, Storage, Key Vault)  
-**Planned:** GCP, AWS
+**Planned:** GCP, AWS.  Lab Environments and IaC through Terraform.
 
 ---
 

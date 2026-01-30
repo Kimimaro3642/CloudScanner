@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy requirements from root (not scanner/)
+# Copy requirements from root
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

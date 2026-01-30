@@ -7,8 +7,7 @@ This file tracks all issues encountered during development, their solutions, and
 
 ## Resolved Issues
 
-### Issue #1: Module Import Errors in Tests
-**Date:** Jan 9, 2026  
+### Issue #1: Module Import Errors in Tests 
 **Severity:** High (blocking tests)  
 **Description:**
 Tests failed with `ModuleNotFoundError: No module named 'scanner'`
@@ -32,7 +31,6 @@ All directories in Python package structures need `__init__.py` (even if empty) 
 ---
 
 ### Issue #2: Test Function Name Mismatches
-**Date:** Jan 9, 2026  
 **Severity:** High (tests importing wrong functions)  
 **Description:**
 Tests tried to import functions that didn't exist:
@@ -61,8 +59,7 @@ Always inspect existing code before writing test fixtures. Don't assume function
 
 ---
 
-### Issue #3: Mock Object Attribute Issues
-**Date:** Jan 9, 2026  
+### Issue #3: Mock Object Attribute Issues 
 **Severity:** Medium (tests passing but not testing correctly)  
 **Description:**
 Test for NSG SSH detection kept returning 0 findings despite mock setup. Test assertion failed:
@@ -88,7 +85,6 @@ When mocking Azure SDK objects, match exact values used in actual checks. Inspec
 ---
 
 ### Issue #4: GitHub Secret Scanning Block
-**Date:** Jan 9, 2026  
 **Severity:** High (push rejected)  
 **Description:**
 Git push to GitHub rejected with:
@@ -121,7 +117,6 @@ Never commit secrets, even in documentation files. Use placeholders. GitHub will
 ---
 
 ### Issue #5: Git LF/CRLF Line Ending Warnings
-**Date:** Jan 9, 2026  
 **Severity:** Low (warnings only, not blocking)  
 **Description:**
 Git displayed warnings on Windows:
@@ -143,7 +138,6 @@ Cross-platform development requires awareness of line ending differences. Low pr
 ---
 
 ### Issue #6: Git Remote Already Exists
-**Date:** Jan 9, 2026  
 **Severity:** Low (non-blocking)  
 **Description:**
 When running setup commands:
@@ -163,7 +157,6 @@ Create empty GitHub repo without auto-initializing with README/gitignore to avoi
 ---
 
 ### Issue #7: Git Non-Fast-Forward Push Error
-**Date:** Jan 9, 2026  
 **Severity:** Medium (push blocked)  
 **Description:**
 After removing `config-notes.txt`:
@@ -189,7 +182,6 @@ Force push is acceptable after removing secrets to clean history. However, in sh
 ## Current/Ongoing Issues
 
 ### Issue #8: Docker Not Installed
-**Date:** Jan 9, 2026  
 **Severity:** Blocking (paused work)  
 **Description:**
 Docker Desktop not installed on development machine. Required for:
@@ -254,25 +246,6 @@ Docker Desktop not installed on development machine. Required for:
 - Secrets in state file (Azure credentials)
 - Team access & locking
 - Disaster recovery
-
----
-
-## Summary Table
-
-| # | Issue | Date | Severity | Status | Resolution |
-|---|-------|------|----------|--------|------------|
-| 1 | Module import errors | Jan 9 | High | ✅ Resolved | Added scanner/__init__.py |
-| 2 | Function name mismatches | Jan 9 | High | ✅ Resolved | Updated test imports |
-| 3 | Mock attribute issues | Jan 9 | Medium | ✅ Resolved | Fixed CIDR notation in mocks |
-| 4 | GitHub secret scan block | Jan 9 | High | ✅ Resolved | Removed config-notes.txt |
-| 5 | LF/CRLF warnings | Jan 9 | Low | ✅ Accepted | No action needed |
-| 6 | Git remote exists | Jan 9 | Low | ✅ Resolved | Ignored, push succeeded |
-| 7 | Non-fast-forward error | Jan 9 | Medium | ✅ Resolved | Force push |
-| 8 | Docker not installed | Jan 9 | Blocking | ⏳ Pending | Install in next session |
-| 9 | Azure creds exposure | Anticipated | High | 🛡️ Mitigated | Use .env & GitHub Secrets |
-| 10 | Coverage gaps | Anticipated | Medium | 🛡️ Mitigated | Plan integration tests |
-| 11 | Dockerfile optimization | Anticipated | Medium | 🛡️ Noted | Test locally first |
-| 12 | Terraform state mgmt | Anticipated | Medium | 🛡️ Noted | Use remote backend |
 
 ---
 

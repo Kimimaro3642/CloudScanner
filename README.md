@@ -73,30 +73,3 @@ pylint scanner/src/
 # Format check with flake8
 flake8 scanner/src/
 ```
-
-## Project Structure
-
-```
-scanner/
-├── src/
-│   ├── main.py
-│   ├── scan.py
-│   ├── checks/
-│   │   ├── nsg.py
-│   │   ├── storage.py
-│   │   └── keyvault.py
-│   └── core/
-│       ├── model.py
-│       ├── clients.py
-│       ├── mitre.py
-│       ├── cvss.py
-│       └── reporter.py
-├── tests/
-│   ├── test_all.py
-│   └── test_*.py
-└── reports/
-```
-
-## License
-
-MIT

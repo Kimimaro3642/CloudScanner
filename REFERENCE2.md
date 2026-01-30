@@ -930,6 +930,109 @@ Return all findings
 
 ---
 
+## 4.4 HOW CVSS SCORES ARE INTEGRATED INTO LIVE CHECKS
+
+### Overview
+All three check functions (NSG, Storage, KeyVault) now populate the `cvss_score` field in Finding objects using the CVSS 3.1 scoring system. This happens automatically when the live scanner runs.
+
+### Integration Pattern
+
+All three check functions follow the same pattern:
+
+**1. Import cvss_for:**
+```python
+from ..core.cvss import severity_for, cvss_for
+```
+
+**2. Use cvss_for() when creating findings:**
+```python
+findings.append(Finding(
+    id=f"AZ-NSG-{code}",
+    service="NSG",
+    resource=f"{rg}/{nsg.name}/{r.name}",
+    rule=code,
+    description=f"World access to {port}",
+    severity=severity_for(code),           # High, Medium, Low
+    mitre=mitre_for(code),                 # T1046, T1190, etc.
+    cvss_score=cvss_for(code)              # NEW: 9.8, 9.1, 7.5, 6.5
+))
+```
+
+### What cvss_for() Does
+
+When a Finding is created with a rule code (like "NSG_WORLD_SSH"), the `cvss_for()` function looks it up in RULE_CVSS and returns the corresponding score:
+
+```python
+# From scanner/src/core/cvss.py
+RULE_CVSS = {
+    "NSG_WORLD_SSH": 9.8,           # Critical
+    "NSG_WORLD_RDP": 9.8,           # Critical
+    "NSG_WORLD_HTTP": 7.5,          # High
+    "STG_PUBLIC_BLOB": 9.1,         # Critical
+    "KV_NO_PURGE_PROTECTION": 6.5,  # Medium
+}
+
+def cvss_for(rule: str) -> float:
+    """Get CVSS 3.1 score for a rule"""
+    return RULE_CVSS.get(rule, 0.0)
+```
+
+**Plain English:** 
+- Each rule code maps to a CVSS score
+- When a finding is created, we look up the score automatically
+- If the rule isn't in the mapping, it defaults to 0.0
+
+### Live Scanner Flow with CVSS
+
+**Before (Test Reports Only):**
+```
+Finding created → severity_for(rule) → HTML report with color
+                → mitre_for(rule)
+```
+
+**After (Both Test & Live Scanner):**
+```
+Finding created → severity_for(rule)   → HTML report with color
+                → mitre_for(rule)       → MITRE display
+                → cvss_for(rule)        → CVSS score (9.8, 9.1, etc.)
+                                        → Color-coded severity
+```
+
+### Benefits of This Integration
+
+1. **Automatic CVSS Scoring:** No manual calculation needed. Each finding automatically gets the correct CVSS score.
+
+2. **Consistent Across Modes:** Whether running test_reports.py or the live scanner against Azure, all findings have CVSS scores.
+
+3. **HTML Report Enhancement:** Reports automatically display:
+   - CVSS 3.1 score (0.0-10.0)
+   - Color-coded severity (Dark Red=Critical, Red=High, Orange=Medium, Green=Low)
+   - Consistent formatting across all findings
+
+4. **JSON Export:** JSON reports include `"cvss_score": 9.8` for each finding, enabling downstream processing, scoring aggregation, etc.
+
+### Implementation Details
+
+**All three check files updated (Jan 30, 2026):**
+- scanner/src/checks/nsg.py
+- scanner/src/checks/storage.py
+- scanner/src/checks/keyvault.py
+
+**Test Verification:**
+- All 6 unit tests pass with CVSS integration
+- test_reports.py generates valid HTML/JSON with scores
+- Coverage maintained at 47%
+
+**Live Scanner Ready:**
+When the scanner runs against Azure:
+1. Check function detects a vulnerability (e.g., world-open SSH)
+2. Finding object is created with rule="NSG_WORLD_SSH"
+3. cvss_for("NSG_WORLD_SSH") returns 9.8
+4. Finding.cvss_score = 9.8
+5. HTML report displays: "CVSS 3.1: 9.8" in dark red background
+
+---
+
 # 5. CORE UTILITIES
 
 ## What These Files Do

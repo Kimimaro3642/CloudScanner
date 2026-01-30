@@ -33,6 +33,13 @@
   - ✅ Added CVSS 3.1 scoring with color-coded severity
   - ✅ Enhanced report readability and layout
   - ✅ Added comprehensive finding details (service, resource, rule)
+- **Live scanner CVSS integration** (COMPLETED Jan 30)
+  - ✅ Updated nsg.py to import cvss_for() and populate cvss_score
+  - ✅ Updated storage.py to import cvss_for() and populate cvss_score
+  - ✅ Updated keyvault.py to import cvss_for() and populate cvss_score
+  - ✅ Verified all 6 unit tests pass with CVSS integration
+  - ✅ Confirmed test_reports.py generates CVSS scores in HTML/JSON
+  - ✅ Live scanner now ready to report CVSS 3.1 scores in production
 - **Next: Terraform infrastructure code**
   - Design main.tf for ACI deployment
   - Create variables.tf for inputs

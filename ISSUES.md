@@ -300,7 +300,58 @@ CVSS scoring is critical for security professionals to prioritize remediation. I
 
 ---
 
-### Issue #11: Dockerfile Optimization
+### Issue #11: Live Scanner Missing CVSS Scores
+**Status:** RESOLVED Jan 30, 2026  
+**Severity:** Medium (feature parity between test and live scanner)  
+**Description:**
+While test_reports.py was generating findings with CVSS scores, the actual live scanner check functions (nsg.py, storage.py, keyvault.py) were not populating the cvss_score field in Finding objects.
+
+**Root Cause:**
+Check functions imported and used `severity_for()` and `mitre_for()` but didn't import or use `cvss_for()`. When live scanner ran against Azure resources, findings would have cvss_score=0.0 (default), losing the CVSS 3.1 scoring.
+
+**Solution:**
+Updated all three check functions:
+1. **scanner/src/checks/nsg.py**
+   - Added `cvss_for` to imports: `from ..core.cvss import severity_for, cvss_for`
+   - Updated Finding creation: `cvss_score=cvss_for(code)` added to all findings
+
+2. **scanner/src/checks/storage.py**
+   - Added `cvss_for` to imports: `from ..core.cvss import severity_for, cvss_for`
+   - Updated Finding creation: `cvss_score=cvss_for("STG_PUBLIC_BLOB")` added
+
+3. **scanner/src/checks/keyvault.py**
+   - Added `cvss_for` to imports: `from ..core.cvss import severity_for, cvss_for`
+   - Updated Finding creation: `cvss_score=cvss_for("KV_NO_PURGE_PROTECTION")` added
+
+**Testing:**
+- All 6 unit tests pass (100% test coverage for check functions)
+- test_reports.py still generates valid JSON/HTML with CVSS scores
+- JSON output verified to include cvss_score field for all findings
+- HTML output verified to display color-coded CVSS scores
+
+**Impact:**
+Now when the live scanner runs against real Azure resources:
+- All findings will include accurate CVSS 3.1 scores (0.0-10.0 scale)
+- HTML reports will display color-coded severity based on CVSS:
+  - 9.0+ = Dark Red (Critical)
+  - 7.0-8.9 = Red (High)
+  - 4.0-6.9 = Orange (Medium)
+  - <4.0 = Green (Low)
+- JSON exports will include cvss_score for downstream processing
+
+**Files Modified:**
+- scanner/src/checks/nsg.py
+- scanner/src/checks/storage.py
+- scanner/src/checks/keyvault.py
+
+**Lessons Learned:**
+- Feature parity between test and production code is important to verify
+- When adding new fields to data models, check all creation points
+- Test infrastructure should mirror live scanner as closely as possible to catch these gaps
+
+---
+
+### Issue #12: Dockerfile Optimization
 **Status:** Needs validation  
 **Anticipated:** When building Docker image  
 **Potential Issues:**
@@ -358,4 +409,4 @@ CVSS scoring is critical for security professionals to prioritize remediation. I
 ---
 
 **Last Updated:** Jan 30, 2026  
-**Total Issues:** 14 (11 resolved, 3 anticipated)
+**Total Issues:** 15 (12 resolved, 3 anticipated)

@@ -28,29 +28,24 @@ Installation.
 
 Create and activate a virtual environment.
 
-```bash
+```powershell
 python -m venv .venv
-
-# Windows
-.venv\Scripts\activate
-
-# macOS/Linux
-source .venv/bin/activate
+.venv\Scripts\Activate.ps1
 ```
 
 Install dependencies.
 
-```bash
+```powershell
 # Production dependencies only
 pip install -r requirements.txt
 
-# Add these if you want to run tests
+# Development dependencies are required for testing
 pip install -r requirements-dev.txt
 ```
 
 Configure Azure credentials.
 
-Create a file named `.env` in the project root with your Azure details.
+A `.env` file should be created in the project root with Azure credentials.
 
 ```
 AZURE_SUBSCRIPTION_ID=your-subscription-id
@@ -65,13 +60,13 @@ Option 1: Using Python directly.
 
 Run the scanner with default settings (outputs to reports/run.html and reports/run.json).
 
-```bash
+```powershell
 python scanner/src/main.py
 ```
 
 Run with custom output paths.
 
-```bash
+```powershell
 python scanner/src/main.py --out my_report.html --json my_findings.json
 ```
 
@@ -79,18 +74,18 @@ Option 2: Using Docker.
 
 Build the Docker image.
 
-```bash
+```powershell
 docker build -t cloudscanner:latest -f scanner/Dockerfile .
 ```
 
-Run the container with your Azure credentials passed as environment variables.
+The container accepts Azure credentials passed as environment variables.
 
-```bash
-docker run -e AZURE_SUBSCRIPTION_ID=your-id \
-  -e AZURE_CLIENT_ID=your-client \
-  -e AZURE_CLIENT_SECRET=your-secret \
-  -e AZURE_TENANT_ID=your-tenant \
-  -v $(pwd)/reports:/app/reports \
+```powershell
+docker run -e AZURE_SUBSCRIPTION_ID=your-id `
+  -e AZURE_CLIENT_ID=your-client `
+  -e AZURE_CLIENT_SECRET=your-secret `
+  -e AZURE_TENANT_ID=your-tenant `
+  -v ${PWD}/reports:/app/reports `
   cloudscanner:latest
 ```
 
@@ -98,7 +93,7 @@ Option 3: Generate sample reports (no Azure credentials needed).
 
 Use this to see what reports look like without Azure access.
 
-```bash
+```powershell
 python test_reports.py
 ```
 
@@ -107,7 +102,7 @@ This creates sample findings and generates reports/test_run.html and reports/tes
 ## Report Format
 
 HTML Reports
-- Color-coded severity (red for high, orange for medium, green for low)
+- Colour-coded severity (red for high, orange for medium, green for low)
 - CVSS 3.1 scores with severity coloring
 - MITRE ATT&CK technique mappings
 - Service, resource, and rule information
@@ -123,20 +118,19 @@ JSON Reports
 
 Run the unit tests to verify the scanner works.
 
-```bash
+```powershell
 python -m pytest scanner/tests/ -v
 ```
 
 Run with coverage report.
 
-```bash
+```powershell
 python -m pytest scanner/tests/ -v --cov=scanner/src --cov-report=html
 ```
 
 ## Documentation
 
 - **[REFERENCE.md](REFERENCE.md)** - Comprehensive line-by-line explanation of all code
-- **[REFERENCE2.md](REFERENCE2.md)** - Detailed technical reference
 - **[TESTING.md](TESTING.md)** - Detailed testing guide
 - **[PROGRESS.md](PROGRESS.md)** - Project progress and status
 - **[ISSUES.md](ISSUES.md)** - Known issues and solutions

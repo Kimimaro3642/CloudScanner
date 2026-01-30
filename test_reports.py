@@ -102,17 +102,17 @@ if __name__ == "__main__":
     # Write JSON report
     json_path = "reports/test_run.json"
     write_json(sample_findings, json_path)
-    print(f"✅ JSON report: {json_path}")
+    print(f"[CREATED] JSON report: {json_path}")
     
     # Write HTML report
     html_path = "reports/test_run.html"
     write_html("azure", sample_findings, html_path)
-    print(f"✅ HTML report: {html_path}")
+    print(f"[CREATED] HTML report: {html_path}")
     
     print(f"\nReports generated with {len(sample_findings)} findings:")
     for finding in sample_findings:
         print(f"  - {finding.id}: {finding.description} ({finding.severity})")
     
-    print("\n📖 View reports:")
+    print("\nView reports:")
     print(f"  JSON: Open {json_path} in VS Code or text editor")
     print(f"  HTML: Run 'start {html_path}' to open in browser")

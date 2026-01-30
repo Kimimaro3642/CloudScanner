@@ -18,7 +18,7 @@ pytest -vv -s
 
 ## Generate Test Reports (Without Azure Credentials)
 
-If you want to see what findings reports look like without running against a real Azure subscription:
+Sample reports can be generated without running against a real Azure subscription to demonstrate the output format:
 
 ```bash
 # Generate sample findings and create test reports

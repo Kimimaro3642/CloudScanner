@@ -1,303 +1,378 @@
-# CloudScanner - Issues & Solutions Log
+# CloudScanner - Issues & Lessons Learned
 
-## Overview
-This file tracks all issues encountered during development, their solutions, and lessons learned. Used for capstone documentation and troubleshooting reference.
-
----
-
-## Quick Reference - Issues by Category
-
-### Import & Module Issues (✅ Resolved)
-- **Issue #1** - Missing `__init__.py` files
-- **Issue #2** - Test function name mismatches
-- **Issue #3** - Mock object attribute issues
-
-### Azure Integration Issues (✅ Resolved)
-- **Issue #4** - GitHub secret scanning block (credentials in files)
-- **Issue #5** - Azure SDK import path issues
-- **Issue #6** - Missing environment variable handling
-- **Issue #7** - Mock Azure client setup in tests
-
-### Docker & Deployment Issues (✅ Resolved)
-- **Issue #8** - Docker Desktop installation
-- **Issue #9** - Import paths in Docker containers
-
-### Feature & Enhancement Issues (✅ Resolved)
-- **Issue #10** - CVSS field missing from Finding model
-- **Issue #11** - Live scanner missing CVSS scores (all check functions)
-- **Issue #12** - Dependencies not in requirements.txt
-
-### Anticipated Issues (⏳ Future)
-- **Issue #13** - Dockerfile optimization
-- **Issue #14** - Terraform state management
-- **Issue #15** - Live Azure environment testing
+Tracks problems encountered during development, how they were solved, and what was learned. This is the project's troubleshooting guide and knowledge base.
 
 ---
 
-## Resolved Issues
+# Resolved Issues
 
-### Issue #1: Module Import Errors in Tests 
-**Severity:** High (blocking tests)  
-**Description:**
-Tests failed with `ModuleNotFoundError: No module named 'scanner'`
+## 1. Missing __init__.py Files
 
-**Root Cause:**
-Missing `scanner/__init__.py` file. Python couldn't recognize `scanner/` as a package.
+**Problem:**
+Tests failed with `ModuleNotFoundError: No module named 'scanner'`. Python didn't recognize `scanner/` as a package.
+
+**Why:**
+Python needs `__init__.py` files (even if empty) in directories to treat them as packages. Without it, relative imports fail.
 
 **Solution:**
-```bash
-touch scanner/__init__.py
-```
+Created `scanner/__init__.py` (empty file was sufficient).
 
-**Lesson Learned:**
-All directories in Python package structures need `__init__.py` (even if empty) for relative imports to work.
-
-**Files Affected:**
-- scanner/tests/test_nsg.py
-- scanner/tests/test_storage.py
-- scanner/tests/test_keyvault.py
+**Plain English:**
+Think of `__init__.py` as a "I'm a package" sign. Python sees the file and knows "this directory can be imported from".
 
 ---
 
-### Issue #2: Test Function Name Mismatches
-**Severity:** High (tests importing wrong functions)  
-**Description:**
+## 2. Test Function Name Mismatches
+
+**Problem:**
 Tests tried to import functions that didn't exist:
-- `check_nsg_rules` (didn't exist, actual: `check_nsg_world_open`)
-- `check_storage_public_access` (didn't exist, actual: `check_storage_public`)
-- `check_keyvault_purge_protection` (matched correctly)
+- `check_nsg_rules` → actual: `check_nsg_world_open`
+- `check_storage_public_access` → actual: `check_storage_public`
 
-**Root Cause:**
-Test file generation didn't align with actual check function names in existing codebase.
+**Why:**
+Test file was created without inspecting existing code first.
 
 **Solution:**
-Updated test imports to match actual function signatures:
+Updated test imports to match actual function names:
 ```python
 from scanner.src.checks.nsg import check_nsg_world_open
 from scanner.src.checks.storage import check_storage_public
 from scanner.src.checks.keyvault import check_keyvault_purge_protection
 ```
 
-**Lesson Learned:**
-Always inspect existing code before writing test fixtures. Don't assume function names.
-
-**Files Modified:**
-- scanner/tests/test_nsg.py
-- scanner/tests/test_storage.py
-- scanner/tests/test_keyvault.py
+**Lesson:**
+Always inspect existing code before writing tests. Don't assume function names.
 
 ---
 
-### Issue #3: Mock Object Attribute Issues 
-**Severity:** Medium (tests passing but not testing correctly)  
-**Description:**
-Test for NSG SSH detection kept returning 0 findings despite mock setup. Test assertion failed:
-```
-AssertionError: 0 not greater than 0
-```
+## 3. Mock Objects Not Matching Reality
 
-**Root Cause:**
-Mock rule used `source_address_prefix = "*"` but actual check code compares against `"0.0.0.0/0"`. The condition `if src=="0.0.0.0/0":` was never true.
+**Problem:**
+NSG test returned 0 findings despite correct mock setup.
+
+**Why:**
+Mock used `source_address_prefix = "*"` but actual check compares against `"0.0.0.0/0"`. The condition never matched.
 
 **Solution:**
-Updated mock to use correct CIDR notation:
+Updated mock to use exact value from real code:
 ```python
-mock_rule.source_address_prefix = "0.0.0.0/0"  # Changed from "*"
+mock_rule.source_address_prefix = "0.0.0.0/0"  # Instead of "*"
 ```
 
-**Lesson Learned:**
-When mocking Azure SDK objects, match exact values used in actual checks. Inspect the real check function logic before writing tests.
-
-**Test Fixed:**
-- scanner/tests/test_nsg.py::TestNSGChecks::test_nsg_world_accessible_ssh
+**Lesson:**
+When mocking, match exact values used in the real check function. Inspect logic before writing tests.
 
 ---
 
-### Issue #4: GitHub Secret Scanning Block
-**Severity:** High (push rejected)  
-**Description:**
-Git push to GitHub rejected with:
-```
-Push cannot contain secrets
-- Azure Active Directory Application Secret
-```
+## 4. GitHub Blocked Push (Secrets in Files)
 
-GitHub's push protection detected secrets in `config-notes.txt` (lines 18, 36).
+**Problem:**
+Git push rejected with: `Push cannot contain secrets - Azure Active Directory Application Secret`
 
-**Root Cause:**
-Old notes file contained actual Azure credentials as examples/documentation.
+**Why:**
+Old `config-notes.txt` had example Azure credentials in it. GitHub's secret scanning caught it.
 
 **Solution:**
-Deleted the file:
+Deleted the file and force-pushed clean history:
 ```bash
 rm config-notes.txt
-git add config-notes.txt
-git commit --amend --no-edit
-git push -u origin main --force
+git push --force
 ```
 
-**Lesson Learned:**
-Never commit secrets, even in documentation files. Use placeholders. GitHub will scan and block. Always use `.gitignore` for `.env` files.
-
-**Prevention:**
-- `.env` file is in `.gitignore` ✅
-- Added to capstone notes about credential management
+**Lesson:**
+Never commit secrets, even in documentation. Use placeholders. Always add `.env` to `.gitignore` from day one.
 
 ---
 
-### Issue #5: Git LF/CRLF Line Ending Warnings
-**Severity:** Low (warnings only, not blocking)  
-**Description:**
-Git displayed warnings on Windows:
-```
-warning: in the working copy of 'requirements.txt', LF will be replaced by CRLF
-```
+## 5. Git Line Ending Warnings (Windows)
 
-Multiple files affected (Python files, requirements.txt, Dockerfile).
+**Problem:**
+Git warnings: `warning: in the working copy of 'requirements.txt', LF will be replaced by CRLF`
 
-**Root Cause:**
-Windows CRLF line endings vs Unix LF line endings. Git autocrlf setting converts between formats.
+**Why:**
+Windows uses CRLF line endings, Unix uses LF. Git auto-converts between them on different systems.
 
 **Solution:**
-No action needed. This is expected behavior on Windows. Git automatically converts on checkout/commit. `.gitattributes` could standardize if needed (deferred).
+No action needed. This is normal on Windows. Git handles it automatically.
 
-**Lesson Learned:**
-Cross-platform development requires awareness of line ending differences. Low priority unless inconsistency causes issues.
+**Lesson:**
+Cross-platform development (Windows/Mac/Linux) means awareness of line ending differences. Usually not a blocker.
 
 ---
 
-### Issue #6: Git Remote Already Exists
-**Severity:** Low (non-blocking)  
-**Description:**
-When running setup commands:
-```
-error: remote origin already exists.
-```
+## 6. Git Remote Already Exists Error
 
-**Root Cause:**
-GitHub repo had default branch created before initial commit, or remote was already configured.
+**Problem:**
+Error: `remote origin already exists` when trying to set remote.
+
+**Why:**
+GitHub repo was pre-initialized or remote already configured.
 
 **Solution:**
-Ignored the error. `git push -u origin main` still succeeded because the remote was properly configured.
+Ignored error. `git push` still succeeded because remote was properly configured.
 
-**Lesson Learned:**
-Create empty GitHub repo without auto-initializing with README/gitignore to avoid this.
+**Lesson:**
+Create empty GitHub repos without auto-initializing to avoid this.
 
 ---
 
-### Issue #7: Git Non-Fast-Forward Push Error
-**Severity:** Medium (push blocked)  
-**Description:**
-After removing `config-notes.txt`:
-```
-! [rejected] main -> main (non-fast-forward)
-hint: Updates were rejected because the tip of your current branch is behind
-```
+## 7. Non-Fast-Forward Git Push Error
 
-**Root Cause:**
-GitHub commit existed (from failed secret-scanning push). Local commit history didn't match remote.
+**Problem:**
+Push rejected: `[rejected] main -> main (non-fast-forward)` after removing secrets.
+
+**Why:**
+Remote had a commit that local didn't match (from failed secret-scanning push).
 
 **Solution:**
-Used force push to overwrite remote with clean local commit:
+Used force push to overwrite remote with clean local history:
 ```bash
-git push -u origin main --force
+git push --force
 ```
 
-**Lesson Learned:**
-Force push is acceptable after removing secrets to clean history. However, in shared repos, coordinate with team. Alternative: rebase instead of force push.
+**Lesson:**
+Force push is acceptable to clean history after removing secrets. In shared repos, coordinate with team first.
 
 ---
 
-## Current/Ongoing Issues
+## 8. Docker Desktop Not Installed
 
-### Issue #8: Docker Not Installed
-**Severity:** Blocking (paused work)  
-**Description:**
-Docker Desktop not installed on development machine. Required for:
-- Building scanner container image
-- Local testing before registry push
-- Terraform deployment planning
+**Problem:**
+Docker commands failed - Docker Desktop not installed.
 
-**Status:** ✅ RESOLVED (Jan 12, 2026)  
+**Status:** [RESOLVED]
+
 **Solution:**
 - Installed Docker Desktop 29.1.3
-- Verified with `docker --version`
-- Successfully built image: `docker build -t cloudscanner:latest -f scanner/Dockerfile .`
-- Tested container with placeholder credentials (expected Azure auth error)
+- Verified: `docker --version`
+- Built test image successfully
+- Tested with placeholder credentials
 
-**Lesson Learned:**
-Docker installation straightforward on Windows via Desktop app. Ensure WSL2 backend configured for best performance.
-
-**Completed:**
-1. ✅ Install Docker Desktop
-2. ✅ Verify: `docker --version` 
-3. ✅ Build test image
-4. ✅ Test with placeholder credentials
+**Lesson:**
+Docker installation on Windows via Desktop app is straightforward. Ensure WSL2 backend is configured.
 
 ---
 
-### Issue #9: test_reports.py Import Resolution
-**Severity:** Medium (script non-functional)  
-**Description:**
-test_reports.py failed to run with import errors:
+## 9. test_reports.py Import Path Issues
+
+**Problem:**
+Script failed with import errors when running from repo root:
 ```
 Import "core.model" could not be resolved
 Import "core.reporter" could not be resolved
 ```
 
-**Root Cause:**
-Relative imports didn't work when running script from repo root. Path resolution failed.
+**Why:**
+Relative imports don't work for standalone scripts. Python's path resolution failed.
 
-**Status:** ✅ RESOLVED (Jan 30, 2026)  
+**Status:** [RESOLVED]
+
 **Solution:**
-Changed from relative imports to absolute imports with proper path handling:
+Used absolute imports with explicit path handling:
 ```python
-import os
+import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'scanner', 'src'))
 from scanner.src.core.model import Finding
 from scanner.src.core.reporter import write_html, write_json
 ```
 
-**Test Results:**
-```
-✅ Generating test reports with 5 sample findings...
-✅ JSON report: reports/test_run.json
-✅ HTML report: reports/test_run.html
-```
-
-**Lesson Learned:**
-Use `os.path.dirname(__file__)` for cross-platform path resolution. Absolute imports more reliable for standalone scripts.
+**Lesson:**
+For standalone scripts, use `os.path.dirname(__file__)` to build paths. Absolute imports more reliable than relative.
 
 ---
 
-## Potential Issues (Anticipated)
+## 10. CVSS Scoring Missing from Find Model
 
-### Issue #10: CVSS Scoring Integration
-**Status:** ✅ RESOLVED (Jan 30, 2026)  
-**Description:**
-Initial HTML report template only showed findings without CVSS scores. Users couldn't see industry-standard vulnerability severity ratings.
+**Problem:**
+HTML reports showed findings but without CVSS 3.1 severity scores.
+
+**Status:** [RESOLVED]
 
 **Solution:**
-- Added `cvss_score` field to Finding dataclass (with default 0.0)
-- Created `RULE_CVSS` mapping with CVSS 3.1 scores (0.0-10.0 scale)
-- Added `cvss_for()` function to retrieve CVSS score for any rule
-- Enhanced HTML template to display CVSS scores with color coding:
-  - Critical (9.0+): Dark red background
-  - High (7.0+): Red background
-  - Medium (4.0+): Orange background
-  - Low (<4.0): Green background
-- Updated test_reports.py with realistic CVSS scores for all sample findings
+- Added `cvss_score` field to Finding class
+- Created RULE_CVSS mapping with industry-standard scores (0.0-10.0 scale)
+- Added `cvss_for()` function to look up scores
+- Updated HTML template to display with color-coding:
+  - Dark Red (9.0+): Critical
+  - Red (7.0-8.9): High
+  - Orange (4.0-6.9): Medium
+  - Green (<4.0): Low
 
-**CVSS Scores Assigned:**
-- NSG_WORLD_SSH: 9.8 (Critical - Remote execution)
-- NSG_WORLD_RDP: 9.8 (Critical - Remote execution)
-- STG_PUBLIC_BLOB: 9.1 (Critical - Data exposure)
-- NSG_WORLD_HTTP: 7.5 (High - Attack exposure)
-- KV_NO_PURGE_PROTECTION: 6.5 (Medium - Recovery risk)
+**CVSS Scores Used:**
+- NSG_WORLD_SSH: 9.8 (Critical)
+- NSG_WORLD_RDP: 9.8 (Critical)
+- STG_PUBLIC_BLOB: 9.1 (Critical)
+- NSG_WORLD_HTTP: 7.5 (High)
+- KV_NO_PURGE_PROTECTION: 6.5 (Medium)
 
-**Files Modified:**
-- scanner/src/core/model.py
-- scanner/src/core/cvss.py
+**Lesson:**
+CVSS scoring is critical for security teams to prioritize remediation. Integrating industry-standard scores makes findings actionable and comparable.
+
+---
+
+## 11. Live Scanner Missing CVSS Scores
+
+**Problem:**
+Test reports had CVSS scores, but live scanner check functions (nsg.py, storage.py, keyvault.py) weren't populating cvss_score in findings.
+
+**Why:**
+Check functions used `severity_for()` and `mitre_for()` but didn't import or use `cvss_for()`.
+
+**Status:** [RESOLVED]
+
+**Solution:**
+Updated all three check functions:
+
+**nsg.py:**
+- Added import: `from ..core.cvss import severity_for, cvss_for`
+- Added to Finding: `cvss_score=cvss_for(code)`
+
+**storage.py:**
+- Added import: `from ..core.cvss import severity_for, cvss_for`
+- Added to Finding: `cvss_score=cvss_for("STG_PUBLIC_BLOB")`
+
+**keyvault.py:**
+- Added import: `from ..core.cvss import severity_for, cvss_for`
+- Added to Finding: `cvss_score=cvss_for("KV_NO_PURGE_PROTECTION")`
+
+**Testing:**
+All 6 unit tests pass. HTML and JSON reports include CVSS scores.
+
+**Lesson:**
+Ensure feature parity between test and live code. Check all object creation points when adding new fields.
+
+---
+
+# Key Lessons Learned
+
+## Why Separate Requirements Files?
+
+**Production** vs **Development** have different needs:
+
+**requirements.txt (Production)**
+- Azure SDKs, Jinja2, CVSS, requests
+- Only what's needed to run scanner
+- Smaller, fewer dependencies
+- Faster Docker builds
+
+**requirements-dev.txt (Development)**
+- pytest, pytest-cov (testing tools)
+- Only needed when developing
+- Separate so production stays lean
+
+**Usage:**
+```bash
+# Production only
+pip install -r requirements.txt
+
+# Development (tests)
+pip install -r requirements.txt -r requirements-dev.txt
+```
+
+**Lesson:**
+Separating dependencies is industry best practice. Keeps production deployments lightweight.
+
+---
+
+## Why Remove Linting Configuration?
+
+**Linters** (flake8, pylint) check code **style**, not **functionality**:
+- Variable naming: `x=5` should be `x = 5`
+- Line length: "Should be <100 characters"
+- Generate "code quality scores"
+
+**For Capstone Projects, what matters:**
+- Code works (6/6 tests passing)
+- Documented (REFERENCE.md explains everything)
+- Understandable (clear variable names, readable logic)
+- Demonstrates knowledge
+
+**What doesn't matter:**
+- Perfect PEP 8 compliance (style rules)
+- Code quality scores (matters for production)
+- Linting tool configurations (adds noise)
+
+**Lesson:**
+For capstone, focus on functionality and documentation. Style enforcement is for production codebases.
+
+---
+
+## Why Keep REFERENCE2.md?
+
+**REFERENCE2.md** is your detailed working reference - comprehensive line-by-line breakdown.
+
+**REFERENCE.md** is your simplified capstone version - shows understanding.
+
+Both serve purposes:
+- REFERENCE2.md: Source material for learning
+- REFERENCE.md: Your interpretation (demonstrates understanding)
+
+**Workflow:**
+1. Learn from REFERENCE2.md details
+2. Simplify and rewrite for REFERENCE.md
+3. Your simplified version shows you've internalized the code
+
+---
+
+## Repository Cleanup for Capstone
+
+**Files Deleted:**
+- ARCHITECTURE.md (content merged into REFERENCE.md)
+- CONTRIBUTING.md (not relevant for capstone)
+- SECURITY.md (not needed yet)
+
+**Reasoning:**
+One comprehensive REFERENCE.md is better than multiple scattered docs. Cleaner repository makes code easier to review.
+
+**Lesson:**
+For capstone projects: "Keep what demonstrates understanding, remove what adds noise."
+
+---
+
+## Dependency Management Misconception
+
+**Common Mistake:**
+"If I have a .coverage file, pytest must be installed"
+
+**Reality:**
+.coverage is an **output file** (test report data), not the tool itself. Having data ≠ having the tool.
+
+**Correct Approach:**
+Always declare packages in requirements.txt or requirements-dev.txt. Files document what tools are needed.
+
+**Lesson:**
+Artifact files (output data) don't mean tools are installed. Explicitly declare all dependencies.
+
+---
+
+# Future Considerations
+
+### Terraform State Management (Not Started)
+When creating infrastructure code:
+- Where to store .tfstate files
+- How to protect secrets in state
+- Team access and locking
+- Disaster recovery planning
+
+### Live Azure Testing (Not Started)
+When running against real Azure resources:
+- Test with actual credentials
+- Verify all three checks work end-to-end
+- Confirm report generation with real findings
+- Document any Azure-specific issues
+
+### Docker Image Optimization (Needs Testing)
+Potential improvements:
+- Reduce image size
+- Improve layer caching
+- Add security hardening (non-root user)
+- Test with large subscriptions
+
+---
+
+**Last Updated:** January 30, 2026  
+**Total Issues Resolved:** 11  
+**Status:** All known issues addressed
 - scanner/src/core/reporter.py
 - test_reports.py
 
@@ -493,20 +568,20 @@ Project initially included code linting configuration files (.flake8, .pylintrc)
 - Focus on **how code looks**, not **if it works**
 
 **For a Capstone Project, What Actually Matters:**
-✅ **Functional** - Code works, tests pass (6/6 passing)
-✅ **Documented** - Clear explanation of what code does (REFERENCE.md)
-✅ **Understandable** - Variable names are clear, logic is readable
-✅ **Demonstrated Knowledge** - Shows you understand the code
+- Functional - Code works, tests pass (6/6 passing)
+- Documented - Clear explanation of what code does (REFERENCE.md)
+- Understandable - Variable names are clear, logic is readable
+- Demonstrated Knowledge - Shows you understand the code
 
-**What Doesn't Matter:**
-❌ Perfect PEP 8 compliance (style enforcement)
-❌ Code quality scores (important for production codebases)
-❌ Linting tool configurations (adds noise without value)
+**What doesn't matter:**
+- Perfect PEP 8 compliance (style enforcement)
+- Code quality scores (important for production codebases)
+- Linting tool configurations (adds noise without value)
 
 **Analogy:**
 Writing an essay for a class:
-- What matters: ✅ Good content, clear organization, demonstrates understanding
-- What doesn't: ❌ Exactly 1.5 line spacing vs 1.25, perfect margins
+- What matters: Good content, clear organization, demonstrates understanding
+- What doesn't: Exactly 1.5 line spacing vs 1.25, perfect margins
 
 **Decision Made:**
 Removed `.flake8` and `.pylintrc` to:
@@ -535,10 +610,10 @@ flake8 scanner/src/
 
 **Reasoning:**
 For a capstone project submission:
-- ✅ **One comprehensive REFERENCE.md** is better than multiple docs
-- ✅ **Contribution guidelines** not relevant (not an open-source project)
-- ✅ **Security policy** not needed (capstone, not production)
-- ✅ **Cleaner repository** = easier for reviewers to focus on actual code
+- One comprehensive REFERENCE.md is better than multiple docs
+- Contribution guidelines not relevant (not an open-source project)
+- Security policy not needed (capstone, not production)
+- Cleaner repository = easier for reviewers to focus on actual code
 
 **Decision Made:**
 Content from these files that was valuable was integrated into:
@@ -556,9 +631,9 @@ Content from these files that was valuable was integrated into:
 **"Keep what demonstrates understanding, remove what adds noise."**
 
 For this project:
-- Keep: ✅ Working code, tests, documentation you wrote
-- Remove: ❌ Configuration files, tools that don't add value to demo
-- Document: ✅ Your decisions and reasoning (like this lesson)
+- Keep: Working code, tests, documentation you wrote
+- Remove: Configuration files, tools that don't add value to demo
+- Document: Your decisions and reasoning (like this lesson)
 
 ---
 

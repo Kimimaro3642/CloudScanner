@@ -22,6 +22,8 @@
 6. [Test Suite](#6-test-suite)
 7. [Configuration Files](#7-configuration-files)
 8. [CI/CD Workflows](#8-cicd-workflows)
+9. [Test Reports Script (test_reports.py)](#9-test-reports-script-testreportspy)
+10. [Dockerfile](#10-dockerfile)
 
 ---
 

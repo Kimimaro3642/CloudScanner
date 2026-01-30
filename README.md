@@ -29,9 +29,14 @@ python -m venv .venv
 # Activate (macOS/Linux)
 source .venv/bin/activate
 
-# Install dependencies
+# Install production dependencies
 pip install -r requirements.txt
+
+# (Optional) Install development/testing dependencies
+pip install -r requirements-dev.txt
 ```
+
+**Note:** `requirements.txt` contains production dependencies (Azure SDKs, Jinja2, CVSS). `requirements-dev.txt` contains testing tools (pytest, pytest-cov). Install both to run tests locally.
 
 ### Configuration
 
@@ -104,13 +109,6 @@ docker run \
 ```bash
 docker logs <container-id>  # Get output from the container
 ```
-
-#### Which Method to Use?
-
-| Method | Best For | Requires |
-|--------|----------|----------|
-| **Manual** | Development, testing, debugging | Python 3.9+, .env file |
-| **Docker** | CI/CD, production, deployment, consistency | Docker installed |
 
 ### Generate Test Reports
 

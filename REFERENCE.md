@@ -18,6 +18,8 @@
 6. Tests
 7. Configuration Files
 8. CI/CD Workflows
+9. Test Reports Script
+10. Docker
 
 # 1. Dependencies (requirements.txt)
     - Purpose: Lists every Python library the scanner needs. `pip install -r requirements.txt` downloads and installs all needed libraries.

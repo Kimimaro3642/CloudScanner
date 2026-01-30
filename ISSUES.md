@@ -424,20 +424,26 @@ Now when the live scanner runs against real Azure resources:
 - The actual packages must be declared in `requirements.txt` or `pyproject.toml`
 - Simply having the data file doesn't auto-install the packages
 
-**Solution:** Always explicitly list test dependencies in requirements:
+**Solution Implemented:** Separate dependency files (best practice):
+- `requirements.txt` - Production only (Azure SDKs, Jinja2, CVSS, requests)
+- `requirements-dev.txt` - Testing tools (pytest, pytest-cov)
+
+**Usage:**
+```bash
+# Production only
+pip install -r requirements.txt
+
+# Production + development
+pip install -r requirements.txt -r requirements-dev.txt
+
+# Or in one command
+pip install -r requirements.txt -r requirements-dev.txt
 ```
-# Production
-azure-identity==1.17.1
-azure-mgmt-network==25.3.0
-# ... etc
 
-# Testing
-pytest==9.0.2
-pytest-cov==7.0.0
-```
+**Benefits:**
+- Production deployments stay lightweight (fewer dependencies)
+- Developers/CI/CD can easily install test tools
+- Clear separation of concerns
+- Industry best practice
 
-**Best Practice:** Consider separate files:
-- `requirements.txt` - Production only
-- `requirements-dev.txt` - Testing/dev tools
-
-Updated in this session: requirements.txt now includes pytest and pytest-cov.
+Updated in this session: Created requirements-dev.txt and separated dependencies properly.

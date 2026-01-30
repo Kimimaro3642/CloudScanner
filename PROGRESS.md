@@ -18,6 +18,29 @@
 - ✅ Live scanner CVSS integration (all check functions)
 - ✅ Dependency management (requirements.txt vs requirements-dev.txt)
 - ✅ Plain English reference documentation (REFERENCE.md in progress)
+- ✅ Repository cleanup & refactoring (removed linting configs, simplified docs)
+
+### Repository Cleanup Rationale (Jan 30)
+**Deleted 6 files to simplify capstone submission:**
+- `.flake8` & `.pylintrc` - Code style linters (enforce PEP 8, not functional tests)
+- `ARCHITECTURE.md` - Redundant (covered in REFERENCE.md)
+- `CONTRIBUTING.md` - Not needed for capstone
+- `SECURITY.md` - Not needed for capstone
+- `REFERENCE2.md` - User rewriting in simplified REFERENCE.md format
+
+**Reasoning:** For a capstone project, what matters is:
+- ✅ **Working code** (tests pass)
+- ✅ **Clear documentation** (REFERENCE.md)
+- ✅ **Demonstrated understanding** (your simplified writing style)
+
+What doesn't matter:
+- ❌ Style enforcement (linters check variable naming, line length)
+- ❌ Code quality scores (important for production, not capstone demo)
+- ❌ Multiple documentation files (cleaner with one comprehensive REFERENCE.md)
+
+**Refactored for clarity:**
+- `PROGRESS.md` - Restructured to session-based format
+- `ISSUES.md` - Added category-based quick reference
 
 ## Current Status
 

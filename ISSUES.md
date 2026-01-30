@@ -476,3 +476,86 @@ pip install -r requirements.txt -r requirements-dev.txt
 - Industry best practice
 
 Updated in this session: Created requirements-dev.txt and separated dependencies properly.
+
+---
+
+## Lessons Learned - Code Quality Tools vs. Capstone Requirements
+
+### Why Remove Linting Tools (.flake8, .pylintrc)?
+
+**Context:**
+Project initially included code linting configuration files (.flake8, .pylintrc) which enforce PEP 8 style compliance. After reviewing capstone requirements, these were removed.
+
+**What Linters Do:**
+- Check code **style** (variable naming conventions, line length, spacing)
+- Example violations: `x=5` (should be `x = 5`), lines >79 characters
+- Provide "code quality scores" (e.g., 9.2/10 rating)
+- Focus on **how code looks**, not **if it works**
+
+**For a Capstone Project, What Actually Matters:**
+✅ **Functional** - Code works, tests pass (6/6 passing)
+✅ **Documented** - Clear explanation of what code does (REFERENCE.md)
+✅ **Understandable** - Variable names are clear, logic is readable
+✅ **Demonstrated Knowledge** - Shows you understand the code
+
+**What Doesn't Matter:**
+❌ Perfect PEP 8 compliance (style enforcement)
+❌ Code quality scores (important for production codebases)
+❌ Linting tool configurations (adds noise without value)
+
+**Analogy:**
+Writing an essay for a class:
+- What matters: ✅ Good content, clear organization, demonstrates understanding
+- What doesn't: ❌ Exactly 1.5 line spacing vs 1.25, perfect margins
+
+**Decision Made:**
+Removed `.flake8` and `.pylintrc` to:
+1. Reduce repository noise
+2. Focus attention on actual code and documentation
+3. Simplify capstone submission
+4. Make code quality about functionality, not style enforcement
+
+**If Needed Later:**
+Can be added back in 30 seconds:
+```bash
+pip install flake8
+flake8 scanner/src/
+```
+
+---
+
+## Lessons Learned - Repository Simplification for Capstone
+
+### Why Remove Non-Essential Documentation Files?
+
+**Files Deleted:**
+- `ARCHITECTURE.md` - High-level design overview
+- `CONTRIBUTING.md` - Contribution guidelines
+- `SECURITY.md` - Security policy
+
+**Reasoning:**
+For a capstone project submission:
+- ✅ **One comprehensive REFERENCE.md** is better than multiple docs
+- ✅ **Contribution guidelines** not relevant (not an open-source project)
+- ✅ **Security policy** not needed (capstone, not production)
+- ✅ **Cleaner repository** = easier for reviewers to focus on actual code
+
+**Decision Made:**
+Content from these files that was valuable was integrated into:
+1. **REFERENCE.md** - Comprehensive code documentation (your rewrite)
+2. **README.md** - Quick start and running instructions
+3. **ISSUES.md** - Lessons learned section
+
+**Result:**
+- Removed 5 non-essential files
+- Created focused, single-source-of-truth documentation
+- Repository is cleaner, easier to navigate
+- Backup created (REFERENCE2.md.bak) if reference needed
+
+### Key Principle for Capstone Projects
+**"Keep what demonstrates understanding, remove what adds noise."**
+
+For this project:
+- Keep: ✅ Working code, tests, documentation you wrote
+- Remove: ❌ Configuration files, tools that don't add value to demo
+- Document: ✅ Your decisions and reasoning (like this lesson)

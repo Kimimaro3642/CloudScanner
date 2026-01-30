@@ -51,17 +51,42 @@ python scanner/src/main.py
 ```
 
 Reports generated in:
-- `reports/scan_report.html`
-- `reports/scan_report.json`
+- `reports/run.html` - Formatted HTML report
+- `reports/run.json` - Structured JSON findings
+
+### Generate Test Reports
+
+To see what reports look like WITHOUT needing real Azure credentials:
+
+```bash
+# Generate sample findings and reports
+python test_reports.py
+```
+
+This creates:
+- `reports/test_run.html` - Example HTML report with sample findings
+- `reports/test_run.json` - Example JSON output
+
+Then view the HTML report:
+```bash
+# Windows
+start reports/test_run.html
+
+# macOS/Linux
+open reports/test_run.html
+```
 
 ## Testing
 
 ```bash
-# Run all tests
-pytest
+# Run unit tests
+pytest scanner/tests/
 
-# Run with coverage
-pytest --cov=scanner/src
+# Run with coverage report
+pytest scanner/tests/ --cov=scanner/src --cov-report=html
+
+# View coverage in browser
+start htmlcov/index.html
 ```
 
 ## Code Quality
@@ -73,3 +98,10 @@ pylint scanner/src/
 # Format check with flake8
 flake8 scanner/src/
 ```
+
+## Documentation
+
+- **[REFERENCE.md](REFERENCE.md)** - Comprehensive line-by-line explanation of all code
+- **[REFERENCE2.md](REFERENCE2.md)** - Backup copy of reference documentation  
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and component overview
+- **[TESTING.md](TESTING.md)** - Detailed testing guide

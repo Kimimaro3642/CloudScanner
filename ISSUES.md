@@ -189,14 +189,55 @@ Docker Desktop not installed on development machine. Required for:
 - Local testing before registry push
 - Terraform deployment planning
 
-**Status:** ⏳ Pending Installation  
-**Next Steps:**
-1. Install Docker Desktop
-2. Verify: `docker --version`
-3. Build test image: `docker build -t cloudscanner:latest -f scanner/Dockerfile .`
-4. Test with placeholder credentials
+**Status:** ✅ RESOLVED (Jan 12, 2026)  
+**Solution:**
+- Installed Docker Desktop 29.1.3
+- Verified with `docker --version`
+- Successfully built image: `docker build -t cloudscanner:latest -f scanner/Dockerfile .`
+- Tested container with placeholder credentials (expected Azure auth error)
 
-**Estimated Resolution:** Next session after reboot
+**Lesson Learned:**
+Docker installation straightforward on Windows via Desktop app. Ensure WSL2 backend configured for best performance.
+
+**Completed:**
+1. ✅ Install Docker Desktop
+2. ✅ Verify: `docker --version` 
+3. ✅ Build test image
+4. ✅ Test with placeholder credentials
+
+---
+
+### Issue #9: test_reports.py Import Resolution
+**Severity:** Medium (script non-functional)  
+**Description:**
+test_reports.py failed to run with import errors:
+```
+Import "core.model" could not be resolved
+Import "core.reporter" could not be resolved
+```
+
+**Root Cause:**
+Relative imports didn't work when running script from repo root. Path resolution failed.
+
+**Status:** ✅ RESOLVED (Jan 30, 2026)  
+**Solution:**
+Changed from relative imports to absolute imports with proper path handling:
+```python
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'scanner', 'src'))
+from scanner.src.core.model import Finding
+from scanner.src.core.reporter import write_html, write_json
+```
+
+**Test Results:**
+```
+✅ Generating test reports with 5 sample findings...
+✅ JSON report: reports/test_run.json
+✅ HTML report: reports/test_run.html
+```
+
+**Lesson Learned:**
+Use `os.path.dirname(__file__)` for cross-platform path resolution. Absolute imports more reliable for standalone scripts.
 
 ---
 
@@ -282,5 +323,5 @@ Docker Desktop not installed on development machine. Required for:
 
 ---
 
-**Last Updated:** Jan 9, 2026  
-**Total Issues:** 12 (8 resolved, 4 anticipated)
+**Last Updated:** Jan 30, 2026  
+**Total Issues:** 13 (10 resolved, 3 anticipated)

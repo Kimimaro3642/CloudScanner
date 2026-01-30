@@ -550,7 +550,7 @@ Content from these files that was valuable was integrated into:
 - Removed 5 non-essential files
 - Created focused, single-source-of-truth documentation
 - Repository is cleaner, easier to navigate
-- Backup created (REFERENCE2.md.bak) if reference needed
+- REFERENCE2.md restored as working reference document
 
 ### Key Principle for Capstone Projects
 **"Keep what demonstrates understanding, remove what adds noise."**
@@ -559,3 +559,45 @@ For this project:
 - Keep: ✅ Working code, tests, documentation you wrote
 - Remove: ❌ Configuration files, tools that don't add value to demo
 - Document: ✅ Your decisions and reasoning (like this lesson)
+
+---
+
+## Documentation Workflow - REFERENCE.md vs REFERENCE2.md
+
+### Purpose of Each File
+
+**REFERENCE2.md** - Working Reference Document
+- **Audience:** You (for learning and interpretation)
+- **Content:** Detailed, line-by-line breakdown of every file
+- **Format:** Technical, comprehensive, in-depth explanations
+- **Use:** Source material for learning and cross-referencing
+- **Updates:** Add new details as you discover them
+
+**REFERENCE.md** - Simplified Capstone Reference
+- **Audience:** Capstone reviewers, project readers
+- **Content:** Distilled, plain-English explanations
+- **Format:** Simplified, readable, demonstrates understanding
+- **Use:** Your interpretation and simplified version
+- **Updates:** Continuously refined from REFERENCE2.md
+
+### Workflow
+1. **Learn from REFERENCE2.md** - Read detailed breakdowns
+2. **Interpret & Simplify** - Rewrite in your own words for REFERENCE.md
+3. **Demonstrate Understanding** - Your simplified version shows you've internalized the code
+4. **Keep Both** - Reference2 stays as detailed reference, Reference becomes simplified version
+
+### Example
+**REFERENCE2.md (detailed):**
+```
+The cvss_for() function takes a rule code as input and returns the corresponding 
+CVSS 3.1 score by looking it up in the RULE_CVSS dictionary. If the rule code 
+is not found in the dictionary, it returns 0.0 as a default value.
+```
+
+**REFERENCE.md (simplified):**
+```
+The cvss_for() function looks up a rule code and returns its CVSS score. 
+If the rule isn't found, it returns 0.0.
+```
+
+Both serve a purpose - REFERENCE2.md helps you learn, REFERENCE.md shows you understand!

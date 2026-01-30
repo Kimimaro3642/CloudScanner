@@ -53,6 +53,7 @@ What doesn't matter:
 
 **Documentation:**
 - REFERENCE.md - In progress (simplified plain English version)
+- REFERENCE2.md - Working reference (detailed line-by-line breakdown)
 - README.md - Complete (quick start, manual & Docker instructions)
 - TESTING.md - Complete (test running instructions)
 - ISSUES.md - Complete (12 resolved issues, 4 anticipated)

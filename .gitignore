@@ -14,10 +14,11 @@ build/
 .env
 .env.local
 
-# Reports
+# Reports & Backups
 reports/
 *.html
 *.json
+*.bak
 
 # Testing
 .pytest_cache/

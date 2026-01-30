@@ -5,6 +5,35 @@ This file tracks all issues encountered during development, their solutions, and
 
 ---
 
+## Quick Reference - Issues by Category
+
+### Import & Module Issues (✅ Resolved)
+- **Issue #1** - Missing `__init__.py` files
+- **Issue #2** - Test function name mismatches
+- **Issue #3** - Mock object attribute issues
+
+### Azure Integration Issues (✅ Resolved)
+- **Issue #4** - GitHub secret scanning block (credentials in files)
+- **Issue #5** - Azure SDK import path issues
+- **Issue #6** - Missing environment variable handling
+- **Issue #7** - Mock Azure client setup in tests
+
+### Docker & Deployment Issues (✅ Resolved)
+- **Issue #8** - Docker Desktop installation
+- **Issue #9** - Import paths in Docker containers
+
+### Feature & Enhancement Issues (✅ Resolved)
+- **Issue #10** - CVSS field missing from Finding model
+- **Issue #11** - Live scanner missing CVSS scores (all check functions)
+- **Issue #12** - Dependencies not in requirements.txt
+
+### Anticipated Issues (⏳ Future)
+- **Issue #13** - Dockerfile optimization
+- **Issue #14** - Terraform state management
+- **Issue #15** - Live Azure environment testing
+
+---
+
 ## Resolved Issues
 
 ### Issue #1: Module Import Errors in Tests 
